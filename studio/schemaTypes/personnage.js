@@ -1,0 +1,83 @@
+export default {
+  name: 'personnage',
+  title: 'Personnage',
+  type: 'document',
+  fields: [
+    {
+      name: 'nom',
+      title: 'Nom complet',
+      type: 'string',
+      validation: Rule => Rule.required()
+    },
+    {
+      name: 'slug',
+      title: 'Slug URL',
+      type: 'slug',
+      options: { source: 'nom' },
+      validation: Rule => Rule.required()
+    },
+    {
+      name: 'surnom',
+      title: 'Surnom / Sous-titre',
+      type: 'string'
+    },
+    {
+      name: 'citation',
+      title: 'Citation',
+      type: 'string'
+    },
+    {
+      name: 'role',
+      title: 'Rôle',
+      type: 'string',
+      options: {
+        list: [
+          { title: 'Personnage joueur', value: 'PJ' },
+          { title: 'Personnage non-joueur', value: 'PNJ' },
+          { title: 'Antagoniste', value: 'antagoniste' }
+        ]
+      }
+    },
+    {
+      name: 'lieu',
+      title: 'Lieu d\'origine',
+      type: 'string'
+    },
+    {
+      name: 'biographie',
+      title: 'Biographie',
+      type: 'array',
+      of: [{ type: 'block' }]
+    },
+    {
+      name: 'imageHero',
+      title: 'Image principale (hero)',
+      type: 'image',
+      options: { hotspot: true }
+    },
+    {
+      name: 'imageDesign',
+      title: 'Image character design',
+      type: 'image',
+      options: { hotspot: true }
+    },
+    {
+      name: 'imageLieu',
+      title: 'Image du lieu',
+      type: 'image',
+      options: { hotspot: true }
+    },
+    {
+      name: 'galerie',
+      title: 'Galerie d\'images',
+      type: 'array',
+      of: [{ type: 'image', options: { hotspot: true } }]
+    },
+    {
+      name: 'nouvelle',
+      title: 'Nouvelle associée',
+      type: 'reference',
+      to: [{ type: 'nouvelle' }]
+    }
+  ]
+}

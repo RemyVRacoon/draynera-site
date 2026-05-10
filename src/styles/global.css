@@ -1,0 +1,25 @@
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;900&family=Crimson+Pro:ital,wght@0,300;1,300&family=Rajdhani:wght@300;400;500&display=swap');
+ 
+:root {
+  --bg-deep:   #0a0a0e;
+  --bg-card:   #111118;
+  --bg-card2:  #14141d;
+  --border:    rgba(180,140,80,0.18);
+  --gold:      #c9a84c;
+  --gold-light:#e8c97a;
+  --gold-dim:  rgba(201,168,76,0.35);
+  --purple:    #7c4dff;
+  --text:      #e8e0d0;
+  --text-dim:  #8a8070;
+  --text-mid:  #b8a890;
+  --red:       #c0392b;
+}
+ 
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+  background: var(--bg-deep);
+  color: var(--text);
+  font-family: 'Crimson Pro', Georgia, serif;
+  overflow-x: hidden;
+}

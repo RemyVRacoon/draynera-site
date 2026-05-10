@@ -1,0 +1,111 @@
+﻿---
+import Base from '../../layouts/Base.astro'
+import { sanityClient, imageUrl } from '../../lib/sanity.js'
+import { toHTML } from '@portabletext/to-html'
+ 
+// Récupère tous les personnages pour générer les URLs
+export async function getStaticPaths() {
+  const personnages = await sanityClient.fetch(
+    `*[_type == "personnage"]{ slug }`
+  )
+  return personnages.map(p => ({
+    params: { slug: p.slug.current }
+  }))
+}
+ 
+// Récupère les données du personnage courant
+const { slug } = Astro.params
+const perso = await sanityClient.fetch(
+  `*[_type == "personnage" && slug.current == $slug][0]{
+    nom, surnom, citation, role, lieu,
+    biographie, imageHero, imageDesign,
+    imageLieu, galerie,
+    nouvelle->{ titre, auteur, resume, slug }
+  }`,
+  { slug }
+)
+ 
+const heroUrl   = imageUrl(perso.imageHero)
+const designUrl = imageUrl(perso.imageDesign)
+const lieuUrl   = imageUrl(perso.imageLieu)
+const bioHTML   = perso.biographie ? toHTML(perso.biographie) : ''
+---
+ 
+<Base title={perso.nom}>
+ 
+<!-- HERO -->
+<section class="hero" style={heroUrl ? `--hero-img: url(${heroUrl})` : ''}>
+  <div class="hero-bg"></div>
+  <div class="hero-content">
+    <h1 class="hero-name">{perso.nom}</h1>
+    <div class="hero-ornament"><div class="ornament-diamond"></div></div>
+    {perso.surnom && <p class="hero-subtitle">{perso.surnom}</p>}
+  </div>
+</section>
+ 
+<!-- INFO GRID -->
+<main class="main">
+  <div class="info-grid">
+    <div class="info-col">
+      <p class="col-label">Character Design</p>
+      {designUrl
+        ? <img src={designUrl} alt={`Design de ${perso.nom}`} class="char-img">
+        : <div class="char-placeholder"></div>
+      }
+    </div>
+ 
+    <div class="info-col col-center">
+      {perso.citation && (
+        <div class="quote-block">
+          <p class="quote-text">« {perso.citation} »</p>
+          <p class="quote-attr">– {perso.nom.split(' ')[0]}</p>
+        </div>
+      )}
+      <div class="bio-block">
+        <Fragment set:html={bioHTML} />
+        <a href="#biographie" class="bio-cta"><span>Lire la biographie</span></a>
+      </div>
+    </div>
+ 
+    <div class="info-col">
+      <div class="role-block">
+        <span class="role-icon">👤</span>
+        <p class="role-label-sm">Rôle</p>
+        <p class="role-value">{perso.role}</p>
+      </div>
+      {lieuUrl && <img src={lieuUrl} alt={perso.lieu} class="lieu-img">}
+      {perso.lieu && <p class="role-value">{perso.lieu}</p>}
+    </div>
+  </div>
+ 
+  <!-- NOUVELLE -->
+  {perso.nouvelle && (
+    <section class="nouvelle-section">
+      <p class="nouvelle-tag">Nouvelle</p>
+      <h2 class="nouvelle-title">{perso.nouvelle.titre}</h2>
+      <p class="nouvelle-author">par {perso.nouvelle.auteur}</p>
+      <p class="nouvelle-desc">{perso.nouvelle.resume}</p>
+      <a href={`/nouvelles/${perso.nouvelle.slug.current}`} class="btn-primary">
+        Lire la nouvelle
+      </a>
+    </section>
+  )}
+ 
+  <!-- GALERIE -->
+  {perso.galerie?.length > 0 && (
+    <section class="gallery-section">
+      <div class="section-header">
+        <p class="section-tag">Galerie d'images</p>
+      </div>
+      <div class="gallery-grid">
+        {perso.galerie.map(img => (
+          <div class="gallery-item">
+            <img src={imageUrl(img)} alt="">
+          </div>
+        ))}
+      </div>
+    </section>
+  )}
+</main>
+ 
+</Base>
