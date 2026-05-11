@@ -79,5 +79,23 @@ export default {
       type: 'reference',
       to: [{ type: 'nouvelle' }]
     }
+    {
+  name: 'misEnAvantCarrousel',
+  title: 'Mettre en avant dans le carrousel ?',
+  type: 'boolean',
+  initialValue: false
+},
+{
+  name: 'ordreCarrousel',
+  title: 'Ordre dans le carrousel (1, 2, 3...)',
+  type: 'number'
+},
+{
+  name: 'nouveau',
+  title: 'Marquer comme "Nouveau" ?',
+  type: 'boolean',
+  initialValue: false
+},
+
   ]
 }
