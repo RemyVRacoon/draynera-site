@@ -78,7 +78,7 @@ export default {
       title: 'Nouvelle associée',
       type: 'reference',
       to: [{ type: 'nouvelle' }]
-    }
+    },
     {
   name: 'misEnAvantCarrousel',
   title: 'Mettre en avant dans le carrousel ?',
