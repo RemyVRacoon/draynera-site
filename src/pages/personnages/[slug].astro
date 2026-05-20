@@ -18,16 +18,19 @@ const { slug } = Astro.params
 const perso = await sanityClient.fetch(
   `*[_type == "personnage" && slug.current == $slug][0]{
     nom, surnom, citation, role, lieu,
-    biographie, imageHero, imageDesign,
-    imageLieu, galerie,
+    biographie,
+    "imageHeroUrl": imageHero.asset->url,
+    "imageDesignUrl": imageDesign.asset->url,
+    "imageLieuUrl": imageLieu.asset->url,
+    galerie[]{ "url": asset->url },
     nouvelle->{ titre, auteur, resume, slug }
   }`,
   { slug }
 )
  
-const heroUrl   = imageUrl(perso.imageHero)
-const designUrl = imageUrl(perso.imageDesign)
-const lieuUrl   = imageUrl(perso.imageLieu)
+const heroUrl   = perso.imageHeroUrl
+const designUrl = perso.imageDesignUrl
+const lieuUrl   = perso.imageLieuUrl
 const bioHTML   = perso.biographie ? toHTML(perso.biographie) : ''
 ---
  
@@ -35,7 +38,7 @@ const bioHTML   = perso.biographie ? toHTML(perso.biographie) : ''
  
 <!-- HERO -->
 <section class="hero" style={heroUrl ? `--hero-img: url(${heroUrl})` : ''}>
-  <div class="hero-bg"></div>
+  <div class="hero-bg" style={heroUrl ? `background-image: url(${heroUrl})` : ''}></div>
   <div class="hero-content">
     <h1 class="hero-name">{perso.nom}</h1>
     <div class="hero-ornament"><div class="ornament-diamond"></div></div>
