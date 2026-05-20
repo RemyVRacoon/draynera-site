@@ -1,0 +1,460 @@
+---
+const {
+  titre,
+  sousTitre,
+  auteur,
+  imageUrl,
+  retourHref  = '/',
+  retourLabel = 'Retour',
+  type        = 'lecture',
+} = Astro.props
+---
+
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{titre} – Draynera</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;900&family=Crimson+Pro:ital,wght@0,300;0,400;1,300;1,400&family=Rajdhani:wght@300;400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/styles/global.css">
+</head>
+<body class="lecture-body">
+
+<!-- ── NAV LECTURE ── -->
+<nav class="lecture-nav" id="lectureNav">
+  <a href={retourHref} class="lecture-nav-retour">
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+      <path d="M10 3L5 8l5 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+    {retourLabel}
+  </a>
+
+  <div class="lecture-nav-centre" id="navCentre">
+    <p class="lecture-nav-titre" id="navTitre">{titre}</p>
+  </div>
+
+  <div class="lecture-nav-progress">
+    <div class="progress-bar" id="progressBar"></div>
+    <span class="progress-pct" id="progressPct">0%</span>
+  </div>
+</nav>
+
+<!-- ── HERO IMAGE ── -->
+<header class="lecture-hero">
+  {imageUrl && (
+    <div class="lecture-hero-img" style={`background-image: url(${imageUrl})`}></div>
+  )}
+  <div class="lecture-hero-gradient"></div>
+  <div class="lecture-hero-content">
+    {type && <p class="lecture-type">{type}</p>}
+    <h1 class="lecture-titre">{titre}</h1>
+    {sousTitre && <p class="lecture-sous-titre">{sousTitre}</p>}
+    {auteur && (
+      <p class="lecture-auteur">
+        <span class="lecture-auteur-par">par</span> {auteur}
+      </p>
+    )}
+    <div class="lecture-scroll-hint">
+      <span>Défiler pour lire</span>
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+        <path d="M8 3v10M4 9l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </div>
+  </div>
+</header>
+
+<!-- ── CONTENU ── -->
+<main class="lecture-main" id="lectureMain">
+  <article class="lecture-article">
+    <slot />
+  </article>
+</main>
+
+<!-- ── FOOTER ── -->
+<footer class="lecture-footer">
+  <a href={retourHref} class="lecture-footer-retour">
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+      <path d="M10 3L5 8l5 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+    {retourLabel}
+  </a>
+  <div class="lecture-footer-logo">
+    <img src="/images/logo-draynera.png" alt="Draynera" style="height:32px; width:auto;">
+  </div>
+  <p class="lecture-footer-copy">© 2026 Mighty Morphin Games Studios</p>
+</footer>
+
+<style>
+.lecture-body {
+  background: var(--bg-deep);
+  color: var(--text);
+  font-family: 'Crimson Pro', Georgia, serif;
+  overflow-x: hidden;
+}
+
+/* ── NAV ── */
+.lecture-nav {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  z-index: 100;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  padding: 0 2rem;
+  height: 56px;
+  background: rgba(8,8,12,0);
+  border-bottom: 1px solid transparent;
+  transition: background 0.4s, border-color 0.4s;
+}
+
+.lecture-nav.scrolled {
+  background: rgba(8,8,12,0.95);
+  border-bottom-color: var(--border);
+  backdrop-filter: blur(12px);
+}
+
+.lecture-nav-retour {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 0.72rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+.lecture-nav-retour:hover { color: var(--gold-light); }
+
+.lecture-nav-centre {
+  opacity: 0;
+  transform: translateY(-6px);
+  transition: opacity 0.4s, transform 0.4s;
+  text-align: center;
+}
+
+.lecture-nav.scrolled .lecture-nav-centre {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.lecture-nav-titre {
+  font-family: 'Cinzel', serif;
+  font-size: 0.85rem;
+  letter-spacing: 0.1em;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 400px;
+}
+
+.lecture-nav-progress {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  justify-content: flex-end;
+}
+
+.progress-bar {
+  width: 120px;
+  height: 2px;
+  background: rgba(255,255,255,0.1);
+  border-radius: 1px;
+  position: relative;
+  overflow: hidden;
+}
+
+.progress-bar::after {
+  content: '';
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  width: var(--progress, 0%);
+  background: var(--gold);
+  transition: width 0.1s linear;
+}
+
+.progress-pct {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 0.65rem;
+  letter-spacing: 0.1em;
+  color: var(--text-dim);
+  min-width: 32px;
+  text-align: right;
+  opacity: 0;
+  transition: opacity 0.4s;
+}
+
+.lecture-nav.scrolled .progress-pct { opacity: 1; }
+
+/* ── HERO ── */
+.lecture-hero {
+  position: relative;
+  height: 100vh;
+  min-height: 600px;
+  display: flex;
+  align-items: flex-end;
+  overflow: hidden;
+}
+
+.lecture-hero-img {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center top;
+  transform: scale(1.04);
+  transition: transform 0.8s ease;
+}
+
+.lecture-hero-gradient {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(180deg,
+      rgba(10,10,14,0.2) 0%,
+      rgba(10,10,14,0.4) 40%,
+      rgba(10,10,14,0.9) 75%,
+      rgba(10,10,14,1) 100%
+    ),
+    linear-gradient(90deg, rgba(10,10,14,0.5) 0%, transparent 60%);
+}
+
+.lecture-hero-content {
+  position: relative;
+  z-index: 1;
+  padding: 0 8% 5rem;
+  max-width: 800px;
+}
+
+.lecture-type {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 0.7rem;
+  letter-spacing: 0.35em;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin-bottom: 0.8rem;
+}
+
+.lecture-titre {
+  font-family: 'Cinzel', serif;
+  font-weight: 900;
+  font-size: clamp(2.2rem, 5vw, 4rem);
+  letter-spacing: 0.04em;
+  color: var(--text);
+  line-height: 1.05;
+  margin-bottom: 0.8rem;
+  text-shadow: 0 2px 20px rgba(0,0,0,0.5);
+}
+
+.lecture-sous-titre {
+  font-family: 'Crimson Pro', serif;
+  font-style: italic;
+  font-size: 1.2rem;
+  color: var(--text-mid);
+  margin-bottom: 0.8rem;
+}
+
+.lecture-auteur {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 0.78rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  margin-bottom: 1.5rem;
+}
+
+.lecture-auteur-par {
+  font-style: italic;
+  text-transform: none;
+  letter-spacing: 0;
+  font-family: 'Crimson Pro', serif;
+  font-size: 0.95rem;
+  color: var(--text-dim);
+}
+
+.lecture-scroll-hint {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 0.65rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  opacity: 0.6;
+  animation: hintFloat 2.5s ease-in-out infinite;
+}
+
+@keyframes hintFloat {
+  0%, 100% { transform: translateY(0); opacity: 0.6; }
+  50%       { transform: translateY(4px); opacity: 0.9; }
+}
+
+/* ── ARTICLE ── */
+.lecture-main {
+  background: var(--bg-deep);
+  position: relative;
+  z-index: 1;
+}
+
+.lecture-article {
+  max-width: 680px;
+  margin: 0 auto;
+  padding: 5rem 2rem 6rem;
+  font-family: 'Crimson Pro', serif;
+  font-size: 1.15rem;
+  line-height: 1.9;
+  color: var(--text-mid);
+}
+
+/* Styles du contenu Portable Text */
+.lecture-article p {
+  margin-bottom: 1.6em;
+}
+
+.lecture-article h2 {
+  font-family: 'Cinzel', serif;
+  font-weight: 700;
+  font-size: 1.4rem;
+  letter-spacing: 0.06em;
+  color: var(--text);
+  margin: 2.5em 0 0.8em;
+  padding-bottom: 0.4em;
+  border-bottom: 1px solid var(--border);
+}
+
+.lecture-article h3 {
+  font-family: 'Cinzel', serif;
+  font-weight: 600;
+  font-size: 1.1rem;
+  letter-spacing: 0.04em;
+  color: var(--text);
+  margin: 2em 0 0.6em;
+}
+
+.lecture-article strong {
+  color: var(--text);
+  font-weight: 600;
+}
+
+.lecture-article em {
+  color: var(--text-mid);
+  font-style: italic;
+}
+
+.lecture-article blockquote {
+  border-left: 2px solid var(--gold);
+  margin: 2em 0;
+  padding: 0.5em 0 0.5em 1.5em;
+  font-style: italic;
+  color: var(--text);
+  font-size: 1.2rem;
+}
+
+.lecture-article hr {
+  border: none;
+  border-top: 1px solid var(--border);
+  margin: 3em auto;
+  width: 60%;
+}
+
+/* Slot pour contenu additionnel (ex: vidéo YouTube) */
+.lecture-extra {
+  max-width: 860px;
+  margin: 0 auto;
+  padding: 0 2rem 5rem;
+}
+
+/* ── FOOTER ── */
+.lecture-footer {
+  border-top: 1px solid var(--border);
+  padding: 3rem 2rem;
+  text-align: center;
+  background: rgba(5,5,8,0.8);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+}
+
+.lecture-footer-retour {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 0.72rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  text-decoration: none;
+  border: 1px solid var(--border);
+  padding: 0.6rem 1.4rem;
+  transition: all 0.2s;
+  margin-bottom: 0.5rem;
+}
+
+.lecture-footer-retour:hover {
+  color: var(--gold-light);
+  border-color: var(--gold-dim);
+}
+
+.lecture-footer-copy {
+  font-size: 0.75rem;
+  color: var(--text-dim);
+}
+
+/* ── RESPONSIVE ── */
+@media (max-width: 700px) {
+  .lecture-hero-content { padding: 0 5% 4rem; }
+  .lecture-article { padding: 3rem 1.2rem 4rem; font-size: 1.05rem; }
+  .progress-bar { width: 70px; }
+  .lecture-nav { grid-template-columns: auto 1fr auto; gap: 0.5rem; padding: 0 1rem; }
+  .lecture-nav-titre { font-size: 0.72rem; max-width: 160px; }
+}
+</style>
+
+<script>
+  const nav         = document.getElementById('lectureNav')
+  const progressBar = document.getElementById('progressBar')
+  const progressPct = document.getElementById('progressPct')
+
+  function updateProgress() {
+    const scrollTop    = window.scrollY
+    const docHeight    = document.documentElement.scrollHeight - window.innerHeight
+    const pct          = docHeight > 0 ? Math.round((scrollTop / docHeight) * 100) : 0
+    const clamped      = Math.min(100, Math.max(0, pct))
+
+    // Barre de progression
+    if (progressBar) progressBar.style.setProperty('--progress', `${clamped}%`)
+    if (progressPct) progressPct.textContent = `${clamped}%`
+
+    // Nav scrolled
+    if (nav) {
+      if (scrollTop > 80) {
+        nav.classList.add('scrolled')
+      } else {
+        nav.classList.remove('scrolled')
+      }
+    }
+
+    // Parallaxe hero
+    const heroImg = document.querySelector('.lecture-hero-img')
+    if (heroImg) {
+      heroImg.style.transform = `scale(1.04) translateY(${scrollTop * 0.12}px)`
+    }
+
+    // Masquer hint après scroll
+    const hint = document.querySelector('.lecture-scroll-hint')
+    if (hint) hint.style.opacity = scrollTop > 100 ? '0' : ''
+  }
+
+  window.addEventListener('scroll', updateProgress, { passive: true })
+  updateProgress()
+</script>
+
+</body>
+</html>

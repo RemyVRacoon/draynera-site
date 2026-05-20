@@ -66,7 +66,7 @@ const bioHTML   = perso.biographie ? toHTML(perso.biographie) : ''
       )}
       <div class="bio-block">
         <Fragment set:html={bioHTML} />
-        <a href="#biographie" class="bio-cta"><span>Lire la biographie</span></a>
+        <a href={`/personnages/${slug}/biographie`} class="bio-cta"><span>Lire la biographie</span></a>
       </div>
     </div>
  

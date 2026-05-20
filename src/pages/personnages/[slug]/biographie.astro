@@ -1,0 +1,34 @@
+---
+import Lecture from '../../../layouts/Lecture.astro'
+import { sanityClient } from '../../../lib/sanity.js'
+import { toHTML } from '@portabletext/to-html'
+
+export async function getStaticPaths() {
+  const personnages = await sanityClient.fetch(`*[_type == "personnage"]{ slug }`)
+  return personnages.map(p => ({ params: { slug: p.slug.current } }))
+}
+
+const { slug } = Astro.params
+const perso = await sanityClient.fetch(
+  `*[_type == "personnage" && slug.current == $slug][0]{
+    nom, surnom, biographie,
+    "imageUrl": imageHero.asset->url
+  }`,
+  { slug }
+)
+
+if (!perso) return Astro.redirect('/personnages')
+
+const bioHTML = perso.biographie ? toHTML(perso.biographie) : ''
+---
+
+<Lecture
+  titre={perso.nom}
+  sousTitre={perso.surnom}
+  imageUrl={perso.imageUrl}
+  retourHref={`/personnages/${slug}`}
+  retourLabel={`Retour à ${perso.nom}`}
+  type="Biographie"
+>
+  <Fragment set:html={bioHTML} />
+</Lecture>

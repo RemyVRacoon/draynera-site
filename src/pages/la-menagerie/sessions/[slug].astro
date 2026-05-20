@@ -1,0 +1,116 @@
+---
+import Lecture from '../../../layouts/Lecture.astro'
+import { sanityClient } from '../../../lib/sanity.js'
+import { toHTML } from '@portabletext/to-html'
+
+export async function getStaticPaths() {
+  const sessions = await sanityClient.fetch(`*[_type == "session"]{ slug }`)
+  return sessions.map(s => ({ params: { slug: s.slug.current } }))
+}
+
+const { slug } = Astro.params
+const session = await sanityClient.fetch(
+  `*[_type == "session" && slug.current == $slug][0]{
+    titre, numero, date, description,
+    resume, videoYoutube,
+    "imageUrl": imageVignette.asset->url
+  }`,
+  { slug }
+)
+
+if (!session) return Astro.redirect('/la-menagerie')
+
+const resumeHTML = session.resume ? toHTML(session.resume) : ''
+
+// Extraire l'ID YouTube depuis l'URL
+function getYoutubeId(url) {
+  if (!url) return null
+  const match = url.match(/(?:v=|youtu\.be\/)([^&\s]+)/)
+  return match ? match[1] : null
+}
+
+const youtubeId = getYoutubeId(session.videoYoutube)
+
+function formatDate(dateStr) {
+  if (!dateStr) return ''
+  const [y, m, d] = dateStr.split('-')
+  return `${d}/${m}/${y}`
+}
+---
+
+<Lecture
+  titre={session.titre}
+  sousTitre={session.description}
+  imageUrl={session.imageUrl}
+  retourHref="/la-menagerie"
+  retourLabel="La Ménagerie"
+  type={`Session #${session.numero}${session.date ? ' · ' + formatDate(session.date) : ''}`}
+>
+  <!-- Résumé textuel -->
+  <Fragment set:html={resumeHTML} />
+
+  <!-- Vidéo YouTube si disponible -->
+  {youtubeId && (
+    <div class="session-video">
+      <div class="session-video-header">
+        <span class="session-video-label">Rediffusion</span>
+        <span class="session-video-titre">{session.titre}</span>
+      </div>
+      <div class="session-video-wrapper">
+        <iframe
+          src={`https://www.youtube.com/embed/${youtubeId}`}
+          title={session.titre}
+          frameborder="0"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+          allowfullscreen
+        ></iframe>
+      </div>
+    </div>
+  )}
+</Lecture>
+
+<style>
+.session-video {
+  margin-top: 3rem;
+  border: 1px solid var(--border);
+}
+
+.session-video-header {
+  padding: 1rem 1.5rem;
+  background: var(--bg-card);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.session-video-label {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 0.65rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--red);
+  border: 1px solid rgba(192,57,43,0.3);
+  padding: 0.15rem 0.5rem;
+}
+
+.session-video-titre {
+  font-family: 'Cinzel', serif;
+  font-size: 0.9rem;
+  color: var(--text-mid);
+}
+
+.session-video-wrapper {
+  position: relative;
+  padding-bottom: 56.25%; /* 16:9 */
+  height: 0;
+  overflow: hidden;
+}
+
+.session-video-wrapper iframe {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+</style>

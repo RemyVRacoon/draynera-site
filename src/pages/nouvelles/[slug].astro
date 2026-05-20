@@ -1,0 +1,36 @@
+---
+import Lecture from '../../layouts/Lecture.astro'
+import { sanityClient } from '../../lib/sanity.js'
+import { toHTML } from '@portabletext/to-html'
+
+export async function getStaticPaths() {
+  const nouvelles = await sanityClient.fetch(`*[_type == "nouvelle"]{ slug }`)
+  return nouvelles.map(n => ({ params: { slug: n.slug.current } }))
+}
+
+const { slug } = Astro.params
+const nouvelle = await sanityClient.fetch(
+  `*[_type == "nouvelle" && slug.current == $slug][0]{
+    titre, auteur, resume,
+    contenu,
+    "imageUrl": image.asset->url
+  }`,
+  { slug }
+)
+
+if (!nouvelle) return Astro.redirect('/nouvelles')
+
+const contenuHTML = nouvelle.contenu ? toHTML(nouvelle.contenu) : ''
+---
+
+<Lecture
+  titre={nouvelle.titre}
+  sousTitre={nouvelle.resume}
+  auteur={nouvelle.auteur}
+  imageUrl={nouvelle.imageUrl}
+  retourHref="/nouvelles"
+  retourLabel="Toutes les nouvelles"
+  type="Nouvelle"
+>
+  <Fragment set:html={contenuHTML} />
+</Lecture>

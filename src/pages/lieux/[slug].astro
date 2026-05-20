@@ -1,0 +1,631 @@
+---
+import Base from '../../layouts/Base.astro'
+import { sanityClient } from '../../lib/sanity.js'
+import { toHTML } from '@portabletext/to-html'
+
+export async function getStaticPaths() {
+  const lieux = await sanityClient.fetch(`*[_type == "lieu"]{ slug }`)
+  return lieux.map(l => ({ params: { slug: l.slug.current } }))
+}
+
+const { slug } = Astro.params
+const lieu = await sanityClient.fetch(
+  `*[_type == "lieu" && slug.current == $slug][0]{
+    nom, description, biographie, galerie,
+    "imageHeroUrl": imageHero.asset->url,
+    "galerieUrls": galerie[].asset->url
+  }`,
+  { slug }
+)
+
+if (!lieu) return Astro.redirect('/lieux')
+
+// Personnages liés à ce lieu
+const personnages = await sanityClient.fetch(
+  `*[_type == "personnage" && lieu == $nom] | order(nom asc) {
+    nom, surnom, slug, role,
+    "imageHeroUrl": imageHero.asset->url
+  }`,
+  { nom: lieu.nom }
+)
+
+// Nouvelles liées à ce lieu (si le champ existe)
+const nouvelles = await sanityClient.fetch(
+  `*[_type == "nouvelle" && $nom in lieux] | order(_createdAt desc) [0...6] {
+    titre, slug, auteur, resume,
+    "imageUrl": image.asset->url
+  }`,
+  { nom: lieu.nom }
+)
+
+const descHTML = lieu.biographie ? toHTML(lieu.biographie) : ''
+---
+
+<Base title={lieu.nom}>
+
+<!-- ── HERO ── -->
+<section class="lieu-hero">
+  {lieu.imageHeroUrl && (
+    <div class="lieu-hero-img" style={`background-image: url(${lieu.imageHeroUrl})`}></div>
+  )}
+  <div class="lieu-hero-gradient"></div>
+  <div class="lieu-hero-content">
+    <p class="lieu-eyebrow">Lieu · Draynera</p>
+    <h1 class="lieu-titre">{lieu.nom}</h1>
+    <div class="lieu-ornament">
+      <span class="lieu-line"></span>
+      <span class="lieu-diamond"></span>
+      <span class="lieu-line"></span>
+    </div>
+    {lieu.description && <p class="lieu-desc-courte">{lieu.description}</p>}
+  </div>
+  <a href="#description" class="lieu-scroll-hint">
+    <span>Explorer</span>
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+      <path d="M8 3v10M4 9l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+  </a>
+</section>
+
+<!-- ── DESCRIPTION ── -->
+{descHTML && (
+  <section class="lieu-section lieu-description" id="description">
+    <div class="lieu-inner">
+      <article class="lieu-texte" set:html={descHTML} />
+    </div>
+  </section>
+)}
+
+<!-- ── PERSONNAGES LIÉS ── -->
+{personnages.length > 0 && (
+  <section class="lieu-section lieu-personnages">
+    <div class="lieu-inner">
+      <header class="lieu-section-header">
+        <div class="s-ligne"></div>
+        <div class="s-titre-groupe">
+          <p class="s-eyebrow">{lieu.nom}</p>
+          <h2 class="s-titre">Personnages</h2>
+        </div>
+        <div class="s-ligne"></div>
+      </header>
+      <div class="perso-grille">
+        {personnages.map(perso => (
+          <a href={`/personnages/${perso.slug.current}`} class="perso-carte">
+            <div
+              class="perso-carte-img"
+              style={perso.imageHeroUrl ? `background-image: url(${perso.imageHeroUrl})` : ''}
+            ></div>
+            <div class="perso-carte-overlay"></div>
+            <div class="perso-carte-content">
+              {perso.role && <p class="perso-role">{perso.role}</p>}
+              <h3 class="perso-nom">{perso.nom}</h3>
+              {perso.surnom && <p class="perso-surnom">{perso.surnom}</p>}
+            </div>
+          </a>
+        ))}
+      </div>
+    </div>
+  </section>
+)}
+
+<!-- ── NOUVELLES LIÉES ── -->
+{nouvelles.length > 0 && (
+  <section class="lieu-section lieu-nouvelles">
+    <div class="lieu-inner">
+      <header class="lieu-section-header">
+        <div class="s-ligne"></div>
+        <div class="s-titre-groupe">
+          <p class="s-eyebrow">{lieu.nom}</p>
+          <h2 class="s-titre">Nouvelles</h2>
+        </div>
+        <div class="s-ligne"></div>
+      </header>
+      <div class="nouvelles-scroll" id="nouvellesScroll">
+        <div class="nouvelles-track">
+          {nouvelles.map(n => (
+            <a href={`/nouvelles/${n.slug.current}`} class="nouvelle-carte">
+              <div
+                class="nouvelle-carte-img"
+                style={n.imageUrl ? `background-image: url(${n.imageUrl})` : ''}
+              ></div>
+              <div class="nouvelle-carte-overlay"></div>
+              <div class="nouvelle-carte-content">
+                <p class="nouvelle-carte-type">Nouvelle</p>
+                <h3 class="nouvelle-carte-titre">{n.titre}</h3>
+                {n.auteur && <p class="nouvelle-carte-auteur">par {n.auteur}</p>}
+              </div>
+            </a>
+          ))}
+        </div>
+      </div>
+    </div>
+  </section>
+)}
+
+<!-- ── GALERIE ── -->
+{lieu.galerieUrls && lieu.galerieUrls.length > 0 && (
+  <section class="lieu-section lieu-galerie">
+    <div class="lieu-inner">
+      <header class="lieu-section-header">
+        <div class="s-ligne"></div>
+        <div class="s-titre-groupe">
+          <p class="s-eyebrow">{lieu.nom}</p>
+          <h2 class="s-titre">Galerie</h2>
+        </div>
+        <div class="s-ligne"></div>
+      </header>
+      <div class="galerie-grille">
+        {lieu.galerieUrls.map((url, i) => (
+          <div
+            class={`galerie-item ${i === 0 ? 'galerie-item-large' : ''}`}
+            style={`background-image: url(${url})`}
+            data-index={i}
+          ></div>
+        ))}
+      </div>
+    </div>
+  </section>
+)}
+
+<!-- ── RETOUR ── -->
+<div class="lieu-retour">
+  <a href="/lieux" class="btn-retour">
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+      <path d="M10 3L5 8l5 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+    Tous les lieux
+  </a>
+</div>
+
+</Base>
+
+<style>
+
+/* ── HERO ── */
+.lieu-hero {
+  position: relative;
+  height: 100vh;
+  min-height: 600px;
+  display: flex;
+  align-items: flex-end;
+  overflow: hidden;
+  margin-top: 56px;
+}
+
+.lieu-hero-img {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center;
+  filter: brightness(0.7) saturate(0.8);
+  transition: transform 0.8s ease;
+}
+
+.lieu-hero-gradient {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(180deg,
+      rgba(10,10,14,0.1) 0%,
+      rgba(10,10,14,0.4) 50%,
+      rgba(10,10,14,0.97) 90%,
+      rgba(10,10,14,1) 100%
+    ),
+    linear-gradient(90deg, rgba(10,10,14,0.4) 0%, transparent 60%);
+}
+
+.lieu-hero-content {
+  position: relative;
+  z-index: 1;
+  padding: 0 8% 5rem;
+  max-width: 700px;
+}
+
+.lieu-eyebrow {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 0.7rem;
+  letter-spacing: 0.35em;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin-bottom: 0.8rem;
+}
+
+.lieu-titre {
+  font-family: 'Cinzel', serif;
+  font-weight: 900;
+  font-size: clamp(3rem, 7vw, 5.5rem);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text);
+  line-height: 0.95;
+  margin-bottom: 1.2rem;
+  text-shadow: 0 2px 30px rgba(0,0,0,0.5);
+}
+
+.lieu-ornament {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  margin-bottom: 1rem;
+}
+
+.lieu-line {
+  display: block;
+  width: 50px;
+  height: 1px;
+  background: linear-gradient(90deg, var(--gold-dim), transparent);
+}
+
+.lieu-ornament .lieu-line:first-child {
+  background: linear-gradient(90deg, transparent, var(--gold-dim));
+}
+
+.lieu-diamond {
+  display: block;
+  width: 6px; height: 6px;
+  background: var(--gold);
+  transform: rotate(45deg);
+}
+
+.lieu-desc-courte {
+  font-family: 'Crimson Pro', serif;
+  font-style: italic;
+  font-size: 1.1rem;
+  color: var(--text-mid);
+  line-height: 1.6;
+  max-width: 500px;
+}
+
+.lieu-scroll-hint {
+  position: absolute;
+  bottom: 2.5rem;
+  right: 8%;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.4rem;
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 0.62rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  text-decoration: none;
+  animation: hintFloat 2.5s ease-in-out infinite;
+}
+
+@keyframes hintFloat {
+  0%, 100% { transform: translateY(0); opacity: 0.6; }
+  50%       { transform: translateY(5px); opacity: 1; }
+}
+
+/* ── SECTIONS COMMUNES ── */
+.lieu-section {
+  padding: 5rem 0;
+}
+
+.lieu-section:nth-child(even) {
+  background: var(--bg-card2);
+}
+
+.lieu-inner {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 3rem;
+}
+
+.lieu-section-header {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  margin-bottom: 3rem;
+}
+
+.s-ligne {
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--border));
+}
+
+.lieu-section-header .s-ligne:last-child {
+  background: linear-gradient(90deg, var(--border), transparent);
+}
+
+.s-titre-groupe { text-align: center; flex-shrink: 0; }
+
+.s-eyebrow {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 0.62rem;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin-bottom: 0.2rem;
+}
+
+.s-titre {
+  font-family: 'Cinzel', serif;
+  font-weight: 900;
+  font-size: 1.6rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text);
+}
+
+/* ── DESCRIPTION ── */
+.lieu-texte {
+  max-width: 720px;
+  margin: 0 auto;
+  font-family: 'Crimson Pro', serif;
+  font-size: 1.15rem;
+  line-height: 1.9;
+  color: var(--text-mid);
+}
+
+.lieu-texte p { margin-bottom: 1.5em; }
+
+.lieu-texte h2 {
+  font-family: 'Cinzel', serif;
+  font-size: 1.3rem;
+  color: var(--text);
+  margin: 2em 0 0.6em;
+  padding-bottom: 0.3em;
+  border-bottom: 1px solid var(--border);
+}
+
+.lieu-texte blockquote {
+  border-left: 2px solid var(--gold);
+  padding: 0.5em 0 0.5em 1.5em;
+  margin: 1.5em 0;
+  font-style: italic;
+  color: var(--text);
+}
+
+/* ── PERSONNAGES ── */
+.perso-grille {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 3px;
+}
+
+.perso-carte {
+  position: relative;
+  aspect-ratio: 2/3;
+  overflow: hidden;
+  display: block;
+  text-decoration: none;
+  background: var(--bg-card);
+}
+
+.perso-carte-img {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center top;
+  transition: transform 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.perso-carte:hover .perso-carte-img { transform: scale(1.06); }
+
+.perso-carte-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, transparent 30%, rgba(10,10,14,0.97) 100%);
+}
+
+.perso-carte-content {
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  padding: 1.2rem;
+}
+
+.perso-role {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 0.58rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin-bottom: 0.25rem;
+}
+
+.perso-nom {
+  font-family: 'Cinzel', serif;
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: var(--text);
+  line-height: 1.2;
+  margin-bottom: 0.2rem;
+}
+
+.perso-surnom {
+  font-family: 'Crimson Pro', serif;
+  font-style: italic;
+  font-size: 0.82rem;
+  color: var(--text-dim);
+}
+
+/* ── NOUVELLES CARROUSEL ── */
+.nouvelles-scroll {
+  overflow-x: auto;
+  scrollbar-width: none;
+  cursor: grab;
+}
+
+.nouvelles-scroll::-webkit-scrollbar { display: none; }
+.nouvelles-scroll.grabbing { cursor: grabbing; }
+
+.nouvelles-track {
+  display: flex;
+  gap: 3px;
+  width: max-content;
+}
+
+.nouvelle-carte {
+  position: relative;
+  width: 280px;
+  height: 380px;
+  overflow: hidden;
+  flex-shrink: 0;
+  display: block;
+  text-decoration: none;
+  background: var(--bg-card);
+}
+
+.nouvelle-carte-img {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center top;
+  transition: transform 0.6s ease;
+  filter: brightness(0.7);
+}
+
+.nouvelle-carte:hover .nouvelle-carte-img {
+  transform: scale(1.05);
+  filter: brightness(0.85);
+}
+
+.nouvelle-carte-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, transparent 30%, rgba(10,10,14,0.97) 100%);
+}
+
+.nouvelle-carte-content {
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  padding: 1.5rem;
+}
+
+.nouvelle-carte-type {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 0.6rem;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin-bottom: 0.3rem;
+}
+
+.nouvelle-carte-titre {
+  font-family: 'Cinzel', serif;
+  font-weight: 700;
+  font-size: 1rem;
+  color: var(--text);
+  line-height: 1.2;
+  margin-bottom: 0.3rem;
+}
+
+.nouvelle-carte-auteur {
+  font-family: 'Crimson Pro', serif;
+  font-style: italic;
+  font-size: 0.85rem;
+  color: var(--text-dim);
+}
+
+/* ── GALERIE ── */
+.galerie-grille {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-auto-rows: 220px;
+  gap: 3px;
+}
+
+.galerie-item {
+  background-size: cover;
+  background-position: center;
+  cursor: pointer;
+  overflow: hidden;
+  transition: filter 0.3s ease;
+  filter: brightness(0.8);
+}
+
+.galerie-item:hover { filter: brightness(1); }
+
+.galerie-item-large {
+  grid-column: span 2;
+  grid-row: span 2;
+}
+
+/* ── RETOUR ── */
+.lieu-retour {
+  padding: 3rem;
+  text-align: center;
+  border-top: 1px solid var(--border);
+}
+
+.btn-retour {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 0.72rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  border: 1px solid var(--border);
+  padding: 0.7rem 1.8rem;
+  text-decoration: none;
+  transition: all 0.2s;
+}
+
+.btn-retour:hover {
+  color: var(--gold-light);
+  border-color: var(--gold-dim);
+}
+
+/* ── RESPONSIVE ── */
+@media (max-width: 1000px) {
+  .perso-grille { grid-template-columns: repeat(3, 1fr); }
+  .galerie-grille { grid-template-columns: repeat(2, 1fr); }
+  .galerie-item-large { grid-column: span 1; grid-row: span 1; }
+}
+
+@media (max-width: 700px) {
+  .perso-grille { grid-template-columns: repeat(2, 1fr); }
+  .lieu-inner { padding: 0 1.2rem; }
+  .lieu-hero-content { padding: 0 5% 4rem; }
+  .galerie-grille { grid-template-columns: 1fr 1fr; grid-auto-rows: 160px; }
+}
+</style>
+
+<script>
+  // Parallaxe hero
+  window.addEventListener('scroll', () => {
+    const img = document.querySelector('.lieu-hero-img')
+    if (img) img.style.transform = `translateY(${window.scrollY * 0.2}px)`
+  }, { passive: true })
+
+  // Drag scroll nouvelles
+  const scroll = document.getElementById('nouvellesScroll')
+  if (scroll) {
+    let isDown = false, startX = 0, scrollLeft = 0
+    scroll.addEventListener('mousedown', e => {
+      isDown = true; scroll.classList.add('grabbing')
+      startX = e.pageX - scroll.offsetLeft; scrollLeft = scroll.scrollLeft
+    })
+    scroll.addEventListener('mouseleave', () => { isDown = false; scroll.classList.remove('grabbing') })
+    scroll.addEventListener('mouseup',    () => { isDown = false; scroll.classList.remove('grabbing') })
+    scroll.addEventListener('mousemove',  e => {
+      if (!isDown) return; e.preventDefault()
+      scroll.scrollLeft = scrollLeft - (e.pageX - scroll.offsetLeft - startX) * 1.5
+    })
+  }
+
+  // Reveal au scroll
+  const sections = document.querySelectorAll('.lieu-section')
+  const io = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        e.target.style.opacity = '1'
+        e.target.style.transform = 'none'
+        io.unobserve(e.target)
+      }
+    })
+  }, { threshold: 0.08 })
+
+  sections.forEach(s => {
+    s.style.opacity = '0'
+    s.style.transform = 'translateY(20px)'
+    s.style.transition = 'opacity 0.8s ease, transform 0.8s ease'
+    io.observe(s)
+  })
+</script>
