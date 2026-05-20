@@ -10,7 +10,9 @@ const { title = 'Draynera' } = Astro.props
 </head>
 <body>
   <nav>
-    <a href="/" class="nav-logo">⬥ DRAYNERA</a>
+   <a href="/" class="nav-logo">
+  <img src="/images/logo-draynera.png" alt="Draynera" class="nav-logo-img">
+</a>
     <ul class="nav-links">
       <li><a href="/personnages">Personnages</a></li>
       <li><a href="/lieux">Lieux</a></li>
@@ -18,7 +20,9 @@ const { title = 'Draynera' } = Astro.props
   </nav>
   <slot />
   <footer>
-    <div class="footer-logo">⬥ DRAYNERA</div>
+    <div class="footer-logo">
+  <img src="/images/logo-draynera.png" alt="Draynera" class="footer-logo-img">
+</div>
     <p class="footer-copy">© 2026 Mighty Morphin Games Studios</p>
   </footer>
 </body>
