@@ -213,15 +213,16 @@ nav {
 
 .char-img {
   width: 100%;
-  aspect-ratio: 3/4;
+  aspect-ratio: 2/3;  /* ← était 3/4, on allonge */
   object-fit: cover;
+  object-position: center top;
   border: 1px solid var(--border);
   display: block;
 }
 
 .char-placeholder {
   width: 100%;
-  aspect-ratio: 3/4;
+  aspect-ratio: 2/3;  /* ← même chose */
   background: linear-gradient(160deg, #1a1520 0%, #0f0d14 100%);
   border: 1px solid var(--border);
 }
@@ -326,9 +327,11 @@ nav {
   width: 100%;
   aspect-ratio: 4/3;
   object-fit: cover;
+  object-position: center;
   border: 1px solid var(--border);
   display: block;
-  margin-top: 1rem;
+  margin-top: 0.6rem;
+  flex: 1;  /* ← prend tout l'espace disponible */
 }
 
 /* ─── NOUVELLE ─── */

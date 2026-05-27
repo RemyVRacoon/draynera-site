@@ -44,6 +44,13 @@ export default {
       type: 'string'
     },
     {
+  name: 'resumeBio',
+  title: 'Résumé biographique (affiché sur la fiche)',
+  type: 'text',
+  rows: 4,
+  description: '2-3 phrases courtes affichées sur la page personnage'
+},
+    {
       name: 'biographie',
       title: 'Biographie',
       type: 'array',

@@ -18,10 +18,11 @@ const { slug } = Astro.params
 const perso = await sanityClient.fetch(
   `*[_type == "personnage" && slug.current == $slug][0]{
     nom, surnom, citation, role, lieu,
+    resumeBio,        // ← nouveau
     biographie,
     "imageHeroUrl": imageHero.asset->url,
     "imageDesignUrl": imageDesign.asset->url,
-    "imageLieuUrl": imageLieu.asset->url,
+    "imageLieuUrl":  imageLieu.asset->url,
     galerie[]{ "url": asset->url },
     nouvelle->{ titre, auteur, resume, slug }
   }`,
@@ -65,9 +66,14 @@ const bioHTML   = perso.biographie ? toHTML(perso.biographie) : ''
         </div>
       )}
       <div class="bio-block">
-        <Fragment set:html={bioHTML} />
-        <a href={`/personnages/${slug}/biographie`} class="bio-cta"><span>Lire la biographie</span></a>
-      </div>
+  {perso.resumeBio
+    ? <p class="bio-text">{perso.resumeBio}</p>
+    : <Fragment set:html={bioHTML} />
+  }
+  <a href={`/personnages/${slug}/biographie`} class="bio-cta">
+    <span>Lire la biographie</span>
+  </a>
+</div>
     </div>
  
     <div class="info-col">
