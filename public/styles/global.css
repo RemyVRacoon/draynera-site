@@ -187,13 +187,19 @@ nav {
 }
 
 /* ─── INFO GRID ─── */
+.info-grid {
+  display: grid;
+  grid-template-columns: 200px 1fr 200px;
+  gap: 2px;
+  background: var(--border);
+  border: 1px solid var(--border);
+  margin-bottom: 3px;
+}
 
-/* Colonne gauche — supprime le padding pour coller au bord */
 .info-col:first-child {
   padding: 0;
 }
 
-/* Colonne droite — supprime le padding aussi */
 .info-col:last-child {
   padding: 0;
   display: flex;
@@ -310,8 +316,8 @@ nav {
   text-transform: uppercase;
   color: var(--text-dim);
   text-align: center;
-  padding: 0.4rem 1rem 0;
   margin-top: 0.5rem;
+  padding: 0.4rem 1rem 0;
 }
 
 .role-value {
@@ -320,8 +326,8 @@ nav {
   letter-spacing: 0.15em;
   text-transform: uppercase;
   color: var(--gold-light);
-  padding: 0 1rem 0.8rem;
   text-align: center;
+  padding: 0 1rem 0.8rem;
 }
 
 .lieu-img {
