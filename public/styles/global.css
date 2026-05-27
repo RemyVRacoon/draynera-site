@@ -198,12 +198,14 @@ nav {
 
 .info-col:first-child {
   padding: 0;
+  background: var(--bg-card);  /* ← ajoute cette ligne */
 }
 
 .info-col:last-child {
   padding: 0;
   display: flex;
   flex-direction: column;
+  background: var(--bg-card);  /* ← ajoute cette ligne */
 }
 
 .col-label {
