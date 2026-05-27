@@ -504,3 +504,10 @@ footer {
     grid-template-columns: 1fr;
   }
 }
+
+.lecture-article p {
+  margin-bottom: 1.6em;
+}
+.lecture-article p:empty {
+  margin-bottom: 0.8em;
+}
