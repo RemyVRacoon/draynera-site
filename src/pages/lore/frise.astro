@@ -1,0 +1,390 @@
+---
+import Base from '../../layouts/Base.astro'
+import { sanityClient } from '../../lib/sanity.js'
+
+const evenements = await sanityClient.fetch(`
+  *[_type == "evenementFrise"] | order(ordreChronologique asc) {
+    titre, date, resume, importance, slug,
+    "imageUrl": image.asset->url,
+    "age": age->{ titre, slug }
+  }
+`)
+---
+
+<Base title="Frise Chronologique">
+
+<div class="frise-page">
+
+  <!-- HEADER -->
+  <header class="frise-header">
+    <div class="frise-header-bg"></div>
+    <div class="frise-header-content">
+      <a href="/lore" class="frise-retour">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+          <path d="M9 2L4 7l5 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+        </svg>
+        Histoire & Lore
+      </a>
+      <p class="frise-eyebrow">Draynera · Navigation temporelle</p>
+      <h1 class="frise-titre">Frise Chronologique</h1>
+      <p class="frise-desc">Défile vers le bas pour avancer dans le temps.</p>
+    </div>
+  </header>
+
+  <!-- FRISE -->
+  <div class="frise-container">
+
+    <!-- Ligne centrale -->
+    <div class="frise-ligne"></div>
+
+    <!-- Événements -->
+    {evenements.map((evt, i) => {
+      const gauche = i % 2 === 0
+      return (
+        <div class={`frise-evt ${gauche ? 'gauche' : 'droite'} importance-${evt.importance || 'normal'}`}>
+
+          <!-- Contenu -->
+          <div class="frise-evt-content">
+
+            {/* Image si disponible */}
+            {evt.imageUrl && (
+              <div class="frise-evt-img" style={`background-image: url(${evt.imageUrl})`}></div>
+            )}
+
+            <div class="frise-evt-body">
+              {evt.age && (
+                <p class="frise-evt-age">{evt.age.titre}</p>
+              )}
+              <p class="frise-evt-date">{evt.date}</p>
+              <h2 class="frise-evt-titre">{evt.titre}</h2>
+              <p class="frise-evt-resume">{evt.resume}</p>
+            </div>
+          </div>
+
+          <!-- Point sur la ligne -->
+          <div class="frise-point">
+            <div class="frise-point-inner"></div>
+          </div>
+
+          <!-- Connecteur -->
+          <div class="frise-connecteur"></div>
+
+        </div>
+      )
+    })}
+
+    {evenements.length === 0 && (
+      <div class="frise-vide">
+        <p>Aucun événement n'a encore été ajouté à la frise.</p>
+      </div>
+    )}
+
+    <!-- Fin de frise -->
+    {evenements.length > 0 && (
+      <div class="frise-fin">
+        <div class="frise-fin-point"></div>
+        <p class="frise-fin-label">À suivre…</p>
+      </div>
+    )}
+
+  </div>
+
+</div>
+
+</Base>
+
+<style>
+
+.frise-page {
+  min-height: 100vh;
+  background: var(--bg-deep);
+}
+
+/* ── HEADER ── */
+.frise-header {
+  position: relative;
+  padding: calc(56px + 4rem) 2rem 4rem;
+  text-align: center;
+  overflow: hidden;
+}
+
+.frise-header-bg {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 60% 80% at 50% 0%, rgba(160,100,20,0.1) 0%, transparent 70%),
+    linear-gradient(180deg, #180e0a 0%, var(--bg-deep) 100%);
+}
+
+.frise-header-content {
+  position: relative;
+  z-index: 1;
+}
+
+.frise-retour {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 0.7rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  text-decoration: none;
+  margin-bottom: 2rem;
+  transition: color 0.2s;
+}
+
+.frise-retour:hover { color: var(--gold-light); }
+
+.frise-eyebrow {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 0.7rem;
+  letter-spacing: 0.35em;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin-bottom: 0.8rem;
+}
+
+.frise-titre {
+  font-family: 'Cinzel', serif;
+  font-weight: 900;
+  font-size: clamp(2rem, 5vw, 3.5rem);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text);
+  margin-bottom: 0.8rem;
+}
+
+.frise-desc {
+  font-family: 'Crimson Pro', serif;
+  font-style: italic;
+  font-size: 1rem;
+  color: var(--text-dim);
+}
+
+/* ── CONTAINER ── */
+.frise-container {
+  position: relative;
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 2rem 2rem 8rem;
+}
+
+/* ── LIGNE CENTRALE ── */
+.frise-ligne {
+  position: absolute;
+  left: 50%;
+  top: 0; bottom: 0;
+  width: 1px;
+  background: linear-gradient(180deg,
+    transparent 0%,
+    var(--gold-dim) 5%,
+    var(--border) 50%,
+    var(--gold-dim) 95%,
+    transparent 100%
+  );
+  transform: translateX(-50%);
+}
+
+/* ── ÉVÉNEMENT ── */
+.frise-evt {
+  position: relative;
+  display: grid;
+  grid-template-columns: 1fr 40px 1fr;
+  align-items: start;
+  margin-bottom: 4rem;
+  opacity: 0;
+  transition: opacity 0.7s ease, transform 0.7s ease;
+}
+
+.frise-evt.visible { opacity: 1; }
+
+.frise-evt.gauche { transform: translateX(-20px); }
+.frise-evt.droite { transform: translateX(20px); }
+.frise-evt.gauche.visible { transform: translateX(0); }
+.frise-evt.droite.visible { transform: translateX(0); }
+
+/* Contenu à gauche */
+.frise-evt.gauche .frise-evt-content {
+  grid-column: 1;
+  grid-row: 1;
+  text-align: right;
+  padding-right: 2.5rem;
+}
+
+.frise-evt.gauche .frise-connecteur {
+  grid-column: 2;
+  grid-row: 1;
+}
+
+/* Contenu à droite */
+.frise-evt.droite .frise-evt-content {
+  grid-column: 3;
+  grid-row: 1;
+  text-align: left;
+  padding-left: 2.5rem;
+}
+
+.frise-evt.droite .frise-connecteur {
+  grid-column: 2;
+  grid-row: 1;
+}
+
+/* Point toujours au centre */
+.frise-point {
+  grid-column: 2;
+  grid-row: 1;
+  display: flex;
+  justify-content: center;
+  padding-top: 1.2rem;
+  z-index: 2;
+}
+
+.frise-point-inner {
+  width: 12px; height: 12px;
+  background: var(--bg-deep);
+  border: 2px solid var(--gold);
+  transform: rotate(45deg);
+  transition: all 0.3s;
+}
+
+.frise-evt.importance-majeur .frise-point-inner {
+  width: 16px; height: 16px;
+  background: var(--gold);
+  box-shadow: 0 0 12px var(--gold-dim);
+}
+
+/* ── CONTENU EVT ── */
+.frise-evt-content {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  transition: border-color 0.3s;
+}
+
+.frise-evt-content:hover {
+  border-color: var(--gold-dim);
+}
+
+.frise-evt-img {
+  width: 100%;
+  aspect-ratio: 16/5;
+  background-size: cover;
+  background-position: center;
+  filter: brightness(0.7) saturate(0.8);
+}
+
+.frise-evt-body {
+  padding: 1.4rem 1.6rem;
+}
+
+.frise-evt-age {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 0.6rem;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin-bottom: 0.2rem;
+}
+
+.frise-evt-date {
+  font-family: 'Cinzel', serif;
+  font-size: 0.75rem;
+  letter-spacing: 0.15em;
+  color: var(--text-dim);
+  margin-bottom: 0.5rem;
+}
+
+.frise-evt-titre {
+  font-family: 'Cinzel', serif;
+  font-weight: 700;
+  font-size: 1.05rem;
+  letter-spacing: 0.04em;
+  color: var(--text);
+  line-height: 1.2;
+  margin-bottom: 0.6rem;
+}
+
+.frise-evt-resume {
+  font-family: 'Crimson Pro', serif;
+  font-size: 0.95rem;
+  line-height: 1.7;
+  color: var(--text-mid);
+}
+
+/* ── FIN DE FRISE ── */
+.frise-fin {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  padding-top: 2rem;
+  position: relative;
+  z-index: 2;
+}
+
+.frise-fin-point {
+  width: 20px; height: 20px;
+  background: var(--gold-dim);
+  transform: rotate(45deg);
+  border: 1px solid var(--gold);
+}
+
+.frise-fin-label {
+  font-family: 'Cinzel', serif;
+  font-style: italic;
+  font-size: 0.9rem;
+  color: var(--text-dim);
+  letter-spacing: 0.1em;
+}
+
+/* ── VIDE ── */
+.frise-vide {
+  text-align: center;
+  padding: 4rem;
+  font-family: 'Crimson Pro', serif;
+  font-style: italic;
+  color: var(--text-dim);
+  grid-column: 1 / -1;
+}
+
+/* ── RESPONSIVE ── */
+@media (max-width: 700px) {
+  .frise-ligne { left: 24px; }
+  .frise-evt {
+    grid-template-columns: 48px 1fr;
+    grid-template-rows: auto;
+  }
+  .frise-evt.gauche .frise-evt-content,
+  .frise-evt.droite .frise-evt-content {
+    grid-column: 2;
+    grid-row: 1;
+    text-align: left;
+    padding-left: 1.5rem;
+    padding-right: 0;
+  }
+  .frise-point {
+    grid-column: 1;
+    grid-row: 1;
+    justify-content: center;
+    padding-top: 1.2rem;
+  }
+  .frise-connecteur { display: none; }
+  .frise-container { padding: 2rem 1rem 6rem; }
+}
+</style>
+
+<script>
+  // Reveal au scroll
+  const evts = document.querySelectorAll('.frise-evt')
+  const io = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        e.target.classList.add('visible')
+        io.unobserve(e.target)
+      }
+    })
+  }, { threshold: 0.15 })
+
+  evts.forEach(e => io.observe(e))
+</script>

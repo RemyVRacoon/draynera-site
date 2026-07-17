@@ -1,0 +1,35 @@
+---
+import Lecture from '../../layouts/Lecture.astro'
+import { sanityClient } from '../../lib/sanity.js'
+import { toHTML } from '@portabletext/to-html'
+
+export async function getStaticPaths() {
+  const articles = await sanityClient.fetch(`*[_type == "articleLore"]{ slug }`)
+  return articles.map(a => ({ params: { slug: a.slug.current } }))
+}
+
+const { slug } = Astro.params
+const article = await sanityClient.fetch(
+  `*[_type == "articleLore" && slug.current == $slug][0]{
+    titre, description, contenu,
+    "imageUrl": imageHero.asset->url,
+    "age": age->{ titre, slug }
+  }`,
+  { slug }
+)
+
+if (!article) return Astro.redirect('/lore')
+
+const contenuHTML = article.contenu ? toHTML(article.contenu) : ''
+---
+
+<Lecture
+  titre={article.titre}
+  sousTitre={article.description}
+  imageUrl={article.imageUrl}
+  retourHref="/lore"
+  retourLabel={article.age?.titre || 'Retour au Lore'}
+  type={article.age?.titre || 'Lore'}
+>
+  <Fragment set:html={contenuHTML} />
+</Lecture>
