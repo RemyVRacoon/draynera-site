@@ -1,12 +1,24 @@
 ---
 import Base from '../../layouts/Base.astro'
 import { sanityClient } from '../../lib/sanity.js'
+import { portableTextToHTML } from '../../lib/portableText.js'
 
 const evenements = await sanityClient.fetch(`
   *[_type == "evenementFrise"] | order(ordreChronologique asc) {
-    titre, date, resume, importance, slug,
+    titre, date, importance, slug,
     "imageUrl": image.asset->url,
-    "age": age->{ titre, slug }
+    "age": age->{ titre, slug },
+    "resume": resume[]{
+      ...,
+      markDefs[]{
+        ...,
+        _type == "termeLore" => {
+          "definition": definition->{
+            slug, categorie, terme
+          }
+        }
+      }
+    }
   }
 `)
 ---
@@ -40,13 +52,13 @@ const evenements = await sanityClient.fetch(`
     <!-- Événements -->
     {evenements.map((evt, i) => {
       const gauche = i % 2 === 0
+      const resumeHTML = portableTextToHTML(evt.resume)
       return (
         <div class={`frise-evt ${gauche ? 'gauche' : 'droite'} importance-${evt.importance || 'normal'}`}>
 
           <!-- Contenu -->
           <div class="frise-evt-content">
 
-            {/* Image si disponible */}
             {evt.imageUrl && (
               <div class="frise-evt-img" style={`background-image: url(${evt.imageUrl})`}></div>
             )}
@@ -57,7 +69,9 @@ const evenements = await sanityClient.fetch(`
               )}
               <p class="frise-evt-date">{evt.date}</p>
               <h2 class="frise-evt-titre">{evt.titre}</h2>
-              <p class="frise-evt-resume">{evt.resume}</p>
+              <div class="frise-evt-resume">
+                <Fragment set:html={resumeHTML} />
+              </div>
             </div>
           </div>
 
@@ -205,7 +219,6 @@ const evenements = await sanityClient.fetch(`
 .frise-evt.gauche.visible { transform: translateX(0); }
 .frise-evt.droite.visible { transform: translateX(0); }
 
-/* Contenu à gauche */
 .frise-evt.gauche .frise-evt-content {
   grid-column: 1;
   grid-row: 1;
@@ -218,7 +231,6 @@ const evenements = await sanityClient.fetch(`
   grid-row: 1;
 }
 
-/* Contenu à droite */
 .frise-evt.droite .frise-evt-content {
   grid-column: 3;
   grid-row: 1;
@@ -231,7 +243,6 @@ const evenements = await sanityClient.fetch(`
   grid-row: 1;
 }
 
-/* Point toujours au centre */
 .frise-point {
   grid-column: 2;
   grid-row: 1;
@@ -312,6 +323,14 @@ const evenements = await sanityClient.fetch(`
   color: var(--text-mid);
 }
 
+.frise-evt-resume p {
+  margin-bottom: 0.6em;
+}
+
+.frise-evt-resume p:last-child {
+  margin-bottom: 0;
+}
+
 /* ── FIN DE FRISE ── */
 .frise-fin {
   display: flex;
@@ -345,7 +364,6 @@ const evenements = await sanityClient.fetch(`
   font-family: 'Crimson Pro', serif;
   font-style: italic;
   color: var(--text-dim);
-  grid-column: 1 / -1;
 }
 
 /* ── RESPONSIVE ── */
@@ -375,7 +393,6 @@ const evenements = await sanityClient.fetch(`
 </style>
 
 <script>
-  // Reveal au scroll
   const evts = document.querySelectorAll('.frise-evt')
   const io = new IntersectionObserver(entries => {
     entries.forEach(e => {

@@ -40,8 +40,17 @@ export default {
     {
       name: 'resume',
       title: 'Résumé',
-      type: 'text',
-      rows: 4,
+      type: 'array',
+      of: [
+        {
+          type: 'block',
+          marks: {
+            annotations: [
+              { type: 'termeLore' }
+            ]
+          }
+        }
+      ],
       validation: Rule => Rule.required()
     },
     {
