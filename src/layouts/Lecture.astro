@@ -16,6 +16,7 @@ const {
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>{titre} – Draynera</title>
+  <link rel="stylesheet" href="/styles/lore-tooltips.css">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;900&family=Crimson+Pro:ital,wght@0,300;0,400;1,300;1,400&family=Rajdhani:wght@300;400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/styles/global.css">
@@ -428,11 +429,9 @@ const {
     const pct          = docHeight > 0 ? Math.round((scrollTop / docHeight) * 100) : 0
     const clamped      = Math.min(100, Math.max(0, pct))
 
-    // Barre de progression
     if (progressBar) progressBar.style.setProperty('--progress', `${clamped}%`)
     if (progressPct) progressPct.textContent = `${clamped}%`
 
-    // Nav scrolled
     if (nav) {
       if (scrollTop > 80) {
         nav.classList.add('scrolled')
@@ -441,13 +440,11 @@ const {
       }
     }
 
-    // Parallaxe hero
     const heroImg = document.querySelector('.lecture-hero-img')
     if (heroImg) {
       heroImg.style.transform = `scale(1.04) translateY(${scrollTop * 0.12}px)`
     }
 
-    // Masquer hint après scroll
     const hint = document.querySelector('.lecture-scroll-hint')
     if (hint) hint.style.opacity = scrollTop > 100 ? '0' : ''
   }
@@ -455,6 +452,13 @@ const {
   window.addEventListener('scroll', updateProgress, { passive: true })
   updateProgress()
 </script>
+
+<script
+  src="/scripts/lore-tooltips.js"
+  data-sanity-project="bkjiutba"
+  data-sanity-dataset="production"
+  defer
+></script>
 
 </body>
 </html>

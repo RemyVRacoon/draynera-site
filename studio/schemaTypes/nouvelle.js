@@ -6,15 +6,29 @@ export default {
     { name: 'titre', title: 'Titre', type: 'string', validation: Rule => Rule.required() },
     { name: 'slug', title: 'Slug URL', type: 'slug', options: { source: 'titre' } },
     { name: 'auteur', title: 'Auteur', type: 'string' },
-    { name: 'resume', title: 'RÈsumÈ court', type: 'text', rows: 3 },
-    { name: 'contenu', title: 'Contenu', type: 'array', of: [{ type: 'block' }] },
-    { name: 'image', title: 'Image principale', type: 'image', options: { hotspot: true }},
+    { name: 'resume', title: 'R√©sum√© court', type: 'text', rows: 3 },
     {
-  name: 'lieux',
-  title: 'Lieux associÈs',
-  type: 'array',
-  of: [{ type: 'string' }],
-  description: 'Noms des lieux liÈs ‡ cette nouvelle (ex: Gardemer)'
-},
+      name: 'contenu',
+      title: 'Contenu',
+      type: 'array',
+      of: [
+        {
+          type: 'block',
+          marks: {
+            annotations: [
+              { type: 'termeLore' }  // ‚Üê annotation popup lore
+            ]
+          }
+        }
+      ]
+    },
+    { name: 'image', title: 'Image principale', type: 'image', options: { hotspot: true } },
+    {
+      name: 'lieux',
+      title: 'Lieux associ√©s',
+      type: 'array',
+      of: [{ type: 'string' }],
+      description: 'Noms des lieux li√©s √† cette nouvelle (ex: Gardemer)'
+    },
   ]
 }

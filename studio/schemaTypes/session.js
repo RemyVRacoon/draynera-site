@@ -38,7 +38,16 @@ export default {
       name: 'resume',
       title: 'Résumé complet',
       type: 'array',
-      of: [{ type: 'block' }]
+      of: [
+        {
+          type: 'block',
+          marks: {
+            annotations: [
+              { type: 'termeLore' }  // ← annotation popup lore
+            ]
+          }
+        }
+      ]
     },
     {
       name: 'videoYoutube',

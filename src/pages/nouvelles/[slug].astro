@@ -1,7 +1,7 @@
 ---
 import Lecture from '../../layouts/Lecture.astro'
 import { sanityClient } from '../../lib/sanity.js'
-import { toHTML } from '@portabletext/to-html'
+import { portableTextToHTML } from '../../lib/portableText.js'
 
 export async function getStaticPaths() {
   const nouvelles = await sanityClient.fetch(`*[_type == "nouvelle"]{ slug }`)
@@ -12,15 +12,25 @@ const { slug } = Astro.params
 const nouvelle = await sanityClient.fetch(
   `*[_type == "nouvelle" && slug.current == $slug][0]{
     titre, auteur, resume,
-    contenu,
-    "imageUrl": image.asset->url
+    "imageUrl": image.asset->url,
+    "contenu": contenu[]{
+      ...,
+      markDefs[]{
+        ...,
+        _type == "termeLore" => {
+          "definition": definition->{
+            slug, categorie, terme
+          }
+        }
+      }
+    }
   }`,
   { slug }
 )
 
 if (!nouvelle) return Astro.redirect('/nouvelles')
 
-const contenuHTML = nouvelle.contenu ? toHTML(nouvelle.contenu) : ''
+const contenuHTML = portableTextToHTML(nouvelle.contenu)
 ---
 
 <Lecture

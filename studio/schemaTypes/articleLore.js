@@ -40,7 +40,16 @@ export default {
       name: 'contenu',
       title: 'Contenu complet',
       type: 'array',
-      of: [{ type: 'block' }]
+      of: [
+        {
+          type: 'block',
+          marks: {
+            annotations: [
+              { type: 'termeLore' }  // ← annotation popup lore
+            ]
+          }
+        }
+      ]
     },
     {
       name: 'imageHero',

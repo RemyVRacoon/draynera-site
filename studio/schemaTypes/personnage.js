@@ -28,7 +28,7 @@ export default {
     },
     {
       name: 'role',
-      title: 'RÙle',
+      title: 'R√¥le',
       type: 'string',
       options: {
         list: [
@@ -44,17 +44,26 @@ export default {
       type: 'string'
     },
     {
-  name: 'resumeBio',
-  title: 'RÈsumÈ biographique (affichÈ sur la fiche)',
-  type: 'text',
-  rows: 4,
-  description: '2-3 phrases courtes affichÈes sur la page personnage'
-},
+      name: 'resumeBio',
+      title: 'R√©sum√© biographique (affich√© sur la fiche)',
+      type: 'text',
+      rows: 4,
+      description: '2-3 phrases courtes affich√©es sur la page personnage'
+    },
     {
       name: 'biographie',
       title: 'Biographie',
       type: 'array',
-      of: [{ type: 'block' }]
+      of: [
+        {
+          type: 'block',
+          marks: {
+            annotations: [
+              { type: 'termeLore' }  // ‚Üê annotation popup lore
+            ]
+          }
+        }
+      ]
     },
     {
       name: 'imageHero',
@@ -82,27 +91,26 @@ export default {
     },
     {
       name: 'nouvelle',
-      title: 'Nouvelle associÈe',
+      title: 'Nouvelle associ√©e',
       type: 'reference',
       to: [{ type: 'nouvelle' }]
     },
     {
-  name: 'misEnAvantCarrousel',
-  title: 'Mettre en avant dans le carrousel ?',
-  type: 'boolean',
-  initialValue: false
-},
-{
-  name: 'ordreCarrousel',
-  title: 'Ordre dans le carrousel (1, 2, 3...)',
-  type: 'number'
-},
-{
-  name: 'nouveau',
-  title: 'Marquer comme "Nouveau" ?',
-  type: 'boolean',
-  initialValue: false
-},
-
+      name: 'misEnAvantCarrousel',
+      title: 'Mettre en avant dans le carrousel ?',
+      type: 'boolean',
+      initialValue: false
+    },
+    {
+      name: 'ordreCarrousel',
+      title: 'Ordre dans le carrousel (1, 2, 3...)',
+      type: 'number'
+    },
+    {
+      name: 'nouveau',
+      title: 'Marquer comme "Nouveau" ?',
+      type: 'boolean',
+      initialValue: false
+    }
   ]
 }

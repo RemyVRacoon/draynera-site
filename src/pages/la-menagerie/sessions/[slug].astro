@@ -1,7 +1,7 @@
 ---
 import Lecture from '../../../layouts/Lecture.astro'
 import { sanityClient } from '../../../lib/sanity.js'
-import { toHTML } from '@portabletext/to-html'
+import { portableTextToHTML } from '../../../lib/portableText.js'
 
 export async function getStaticPaths() {
   const sessions = await sanityClient.fetch(`*[_type == "session"]{ slug }`)
@@ -12,15 +12,26 @@ const { slug } = Astro.params
 const session = await sanityClient.fetch(
   `*[_type == "session" && slug.current == $slug][0]{
     titre, numero, date, description,
-    resume, videoYoutube,
-    "imageUrl": imageVignette.asset->url
+    videoYoutube,
+    "imageUrl": imageVignette.asset->url,
+    "resume": resume[]{
+      ...,
+      markDefs[]{
+        ...,
+        _type == "termeLore" => {
+          "definition": definition->{
+            slug, categorie, terme
+          }
+        }
+      }
+    }
   }`,
   { slug }
 )
 
 if (!session) return Astro.redirect('/la-menagerie')
 
-const resumeHTML = session.resume ? toHTML(session.resume) : ''
+const resumeHTML = portableTextToHTML(session.resume)
 
 // Extraire l'ID YouTube depuis l'URL
 function getYoutubeId(url) {

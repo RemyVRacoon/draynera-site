@@ -1,4 +1,4 @@
-﻿---
+---
 const { title = 'Draynera' } = Astro.props
 ---
 <html lang="fr">
@@ -7,25 +7,32 @@ const { title = 'Draynera' } = Astro.props
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>{title} – Draynera</title>
   <link rel="stylesheet" href="/styles/global.css">
+  <link rel="stylesheet" href="/styles/lore-tooltips.css">
 </head>
 <body>
   <nav>
-   <a href="/" class="nav-logo">
-  <img src="/images/logo-draynera.png" alt="Draynera" class="nav-logo-img">
-</a>
+    <a href="/" class="nav-logo">
+      <img src="/images/logo-draynera.png" alt="Draynera" class="nav-logo-img">
+    </a>
     <ul class="nav-links">
       <li><a href="/personnages">Personnages</a></li>
       <li><a href="/lieux">Lieux</a></li>
-      <li><a href="/la-menagerie">La Ménagerie</a></li>      
+      <li><a href="/la-menagerie">La Ménagerie</a></li>
       <li><a href="/lore">Lore</a></li>
     </ul>
   </nav>
   <slot />
   <footer>
     <div class="footer-logo">
-  <img src="/images/logo-draynera.png" alt="Draynera" class="footer-logo-img">
-</div>
+      <img src="/images/logo-draynera.png" alt="Draynera" class="footer-logo-img">
+    </div>
     <p class="footer-copy">© 2026 Mighty Morphin Games Studios</p>
   </footer>
+  <script
+    src="/scripts/lore-tooltips.js"
+    data-sanity-project="bkjiutba"
+    data-sanity-dataset="production"
+    defer
+  ></script>
 </body>
 </html>

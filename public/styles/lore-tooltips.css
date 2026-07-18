@@ -1,0 +1,150 @@
+/* ════════════════════════════════════════════════════
+   DRAYNERA — Styles popups Lore (style CK3)
+════════════════════════════════════════════════════ */
+
+/* ── TERMES CLIQUABLES DANS LE TEXTE ── */
+[data-lore-slug] {
+  color: var(--gold-light);
+  border-bottom: 1px dotted var(--gold-dim);
+  cursor: help;
+  transition: color 0.15s, border-color 0.15s;
+  position: relative;
+}
+
+[data-lore-slug]:hover {
+  color: var(--gold);
+  border-bottom-color: var(--gold);
+}
+
+/* Catégories avec couleurs différentes */
+.lore-term[data-cat="lieu"]         { color: #7eb8d4; border-bottom-color: rgba(126,184,212,0.4); }
+.lore-term[data-cat="lieu"]:hover   { color: #a8d4e8; }
+.lore-term[data-cat="personnage"]   { color: #c8a4d4; border-bottom-color: rgba(200,164,212,0.4); }
+.lore-term[data-cat="personnage"]:hover { color: #dfc0e8; }
+.lore-term[data-cat="organisation"] { color: #d4a47e; border-bottom-color: rgba(212,164,126,0.4); }
+.lore-term[data-cat="evenement"]    { color: #d47e7e; border-bottom-color: rgba(212,126,126,0.4); }
+
+/* ── POPUP ── */
+.lore-popup {
+  position: absolute;
+  width: 280px;
+  background: var(--bg-card);
+  border: 1px solid var(--gold-dim);
+  box-shadow:
+    0 8px 32px rgba(0,0,0,0.6),
+    0 0 0 1px rgba(201,168,76,0.08),
+    inset 0 1px 0 rgba(201,168,76,0.1);
+  pointer-events: all;
+  opacity: 0;
+  transform: translateY(6px) scale(0.97);
+  transition: opacity 0.2s ease, transform 0.2s ease;
+  will-change: transform, opacity;
+}
+
+.lore-popup-visible {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+/* Triangle pointeur */
+.lore-popup::before {
+  content: '';
+  position: absolute;
+  top: -5px;
+  left: 16px;
+  width: 8px; height: 8px;
+  background: var(--bg-card);
+  border-left: 1px solid var(--gold-dim);
+  border-top: 1px solid var(--gold-dim);
+  transform: rotate(45deg);
+}
+
+.lore-popup-inner {
+  padding: 0;
+}
+
+/* ── HEADER POPUP ── */
+.lore-popup-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.5rem 0.75rem;
+  border-bottom: 1px solid var(--border);
+  background: rgba(201,168,76,0.05);
+}
+
+.lore-popup-cat {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 0.6rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+}
+
+.lore-popup-close {
+  background: none;
+  border: none;
+  color: var(--text-dim);
+  cursor: pointer;
+  font-size: 0.7rem;
+  padding: 0.1rem 0.2rem;
+  line-height: 1;
+  transition: color 0.15s;
+  font-family: sans-serif;
+}
+
+.lore-popup-close:hover {
+  color: var(--text);
+}
+
+/* ── TITRE ── */
+.lore-popup-titre {
+  font-family: 'Cinzel', serif;
+  font-weight: 700;
+  font-size: 0.95rem;
+  letter-spacing: 0.04em;
+  color: var(--text);
+  padding: 0.7rem 0.75rem 0.3rem;
+  line-height: 1.2;
+}
+
+/* ── DÉFINITION ── */
+.lore-popup-def {
+  font-family: 'Crimson Pro', serif;
+  font-size: 0.95rem;
+  line-height: 1.6;
+  color: var(--text-mid);
+  padding: 0 0.75rem 0.75rem;
+}
+
+/* Termes dans les popups = même style */
+.lore-popup .lore-term {
+  color: var(--gold-light);
+  border-bottom: 1px dotted var(--gold-dim);
+  cursor: help;
+}
+
+/* ── LIEN VERS PAGE ── */
+.lore-popup-lien {
+  display: block;
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 0.65rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--gold);
+  text-decoration: none;
+  padding: 0.5rem 0.75rem;
+  border-top: 1px solid var(--border);
+  transition: color 0.15s, background 0.15s;
+}
+
+.lore-popup-lien:hover {
+  color: var(--gold-light);
+  background: rgba(201,168,76,0.06);
+}
+
+/* ── DÉCALAGE VISUEL DES POPUPS EMPILÉES ── */
+.lore-popup[data-stack-index="1"] { border-color: rgba(201,168,76,0.5); }
+.lore-popup[data-stack-index="2"] { border-color: rgba(201,168,76,0.65); }
+.lore-popup[data-stack-index="3"] { border-color: rgba(201,168,76,0.8); }
+.lore-popup[data-stack-index="4"] { border-color: var(--gold); }
