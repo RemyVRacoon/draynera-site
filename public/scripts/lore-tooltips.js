@@ -13,8 +13,9 @@
   // ── CONFIG ──────────────────────────────────────────────
   const HOVER_DELAY   = 600    // ms avant affichage
   const MAX_POPUPS    = 5      // max popups empilées
-  const SANITY_PROJECT= document.documentElement.dataset.sanityProject || ''
-  const SANITY_DATASET= document.documentElement.dataset.sanityDataset || 'production'
+  const scriptEl = document.currentScript || document.querySelector('script[data-sanity-project]')
+  const SANITY_PROJECT = scriptEl?.dataset.sanityProject || 'bkjiutba'
+  const SANITY_DATASET = scriptEl?.dataset.sanityDataset || 'production'
   const API_VERSION   = '2024-01-01'
 
   // ── STATE ────────────────────────────────────────────────
