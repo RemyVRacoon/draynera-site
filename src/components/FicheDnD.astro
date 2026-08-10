@@ -1,0 +1,1166 @@
+---
+// src/components/FicheDnD.astro
+// Composant : bouton PJ → mot de passe → flip → fiche D&D 5e
+// Props reçues depuis la page personnage
+
+const { slug } = Astro.props
+---
+
+<!-- Bouton déclencheur (remplace le badge PJ) -->
+<button class="pj-badge" id="pjBadge" title="Voir la fiche de personnage">
+  <span class="pj-icon">⚔</span>
+  <span class="pj-label">PJ</span>
+  <span class="pj-hint">Cliquer pour la fiche</span>
+</button>
+
+<!-- Overlay de mot de passe -->
+<div class="fiche-overlay" id="ficheOverlay">
+  <div class="fiche-password-modal" id="passwordModal">
+    <button class="fiche-close" id="ficheClose">✕</button>
+    <div class="fiche-password-logo">⚔</div>
+    <h3 class="fiche-password-titre">Fiche de Personnage</h3>
+    <p class="fiche-password-desc">Entre le mot de passe du joueur pour accéder à la fiche.</p>
+    <div class="fiche-password-input-group">
+      <input
+        type="password"
+        id="passwordInput"
+        class="fiche-password-input"
+        placeholder="Mot de passe..."
+        autocomplete="off"
+      />
+      <button class="fiche-password-btn" id="passwordBtn">→</button>
+    </div>
+    <p class="fiche-password-error" id="passwordError">Mot de passe incorrect.</p>
+  </div>
+</div>
+
+<!-- Fiche D&D (flip card) -->
+<div class="fiche-container" id="ficheContainer">
+  <div class="fiche-card" id="ficheCard">
+
+    <!-- RECTO : page personnage normale (invisible ici, géré par la page parente) -->
+    <div class="fiche-recto"></div>
+
+    <!-- VERSO : fiche D&D -->
+    <div class="fiche-verso" id="ficheVerso">
+      <div class="fiche-dnd">
+
+        <!-- Bouton fermer -->
+        <button class="fiche-dnd-close" id="ficheDndClose">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+            <path d="M4 4l8 8M12 4l-8 8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+          </svg>
+          Retour
+        </button>
+
+        <!-- Chargement -->
+        <div class="fiche-loading" id="ficheLoading">
+          <div class="fiche-loading-spinner"></div>
+          <p>Chargement de la fiche...</p>
+        </div>
+
+        <!-- Contenu fiche -->
+        <div class="fiche-dnd-content" id="ficheDndContent" style="display:none">
+
+          <!-- ── EN-TÊTE ── -->
+          <div class="dnd-header">
+            <div class="dnd-header-nom">
+              <span class="dnd-field-label">Nom du personnage</span>
+              <span class="dnd-field-value" id="f-nom">—</span>
+            </div>
+            <div class="dnd-header-grid">
+              <div class="dnd-header-cell">
+                <span class="dnd-field-label">Classe & Niveau</span>
+                <span class="dnd-field-value" id="f-classe">—</span>
+              </div>
+              <div class="dnd-header-cell">
+                <span class="dnd-field-label">Historique</span>
+                <span class="dnd-field-value" id="f-historique">—</span>
+              </div>
+              <div class="dnd-header-cell">
+                <span class="dnd-field-label">Nom du joueur</span>
+                <span class="dnd-field-value" id="f-joueur">—</span>
+              </div>
+              <div class="dnd-header-cell">
+                <span class="dnd-field-label">Race</span>
+                <span class="dnd-field-value" id="f-race">—</span>
+              </div>
+              <div class="dnd-header-cell">
+                <span class="dnd-field-label">Alignement</span>
+                <span class="dnd-field-value" id="f-alignement">—</span>
+              </div>
+              <div class="dnd-header-cell">
+                <span class="dnd-field-label">Points d'XP</span>
+                <span class="dnd-field-value" id="f-xp">0</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- ── CORPS ── -->
+          <div class="dnd-body">
+
+            <!-- COLONNE GAUCHE : stats + sauvegardes + compétences -->
+            <div class="dnd-col-left">
+
+              <!-- 6 caractéristiques -->
+              <div class="dnd-stats">
+                <div class="dnd-stat" id="stat-for">
+                  <span class="dnd-stat-name">FORCE</span>
+                  <div class="dnd-stat-mod" id="mod-for">+0</div>
+                  <div class="dnd-stat-score" id="score-for">10</div>
+                </div>
+                <div class="dnd-stat" id="stat-dex">
+                  <span class="dnd-stat-name">DEXTÉRITÉ</span>
+                  <div class="dnd-stat-mod" id="mod-dex">+0</div>
+                  <div class="dnd-stat-score" id="score-dex">10</div>
+                </div>
+                <div class="dnd-stat" id="stat-con">
+                  <span class="dnd-stat-name">CONSTITUTION</span>
+                  <div class="dnd-stat-mod" id="mod-con">+0</div>
+                  <div class="dnd-stat-score" id="score-con">10</div>
+                </div>
+                <div class="dnd-stat" id="stat-int">
+                  <span class="dnd-stat-name">INTELLIGENCE</span>
+                  <div class="dnd-stat-mod" id="mod-int">+0</div>
+                  <div class="dnd-stat-score" id="score-int">10</div>
+                </div>
+                <div class="dnd-stat" id="stat-sag">
+                  <span class="dnd-stat-name">SAGESSE</span>
+                  <div class="dnd-stat-mod" id="mod-sag">+0</div>
+                  <div class="dnd-stat-score" id="score-sag">10</div>
+                </div>
+                <div class="dnd-stat" id="stat-cha">
+                  <span class="dnd-stat-name">CHARISME</span>
+                  <div class="dnd-stat-mod" id="mod-cha">+0</div>
+                  <div class="dnd-stat-score" id="score-cha">10</div>
+                </div>
+              </div>
+
+              <!-- Inspiration + Bonus maîtrise -->
+              <div class="dnd-misc">
+                <div class="dnd-misc-item">
+                  <span class="dnd-misc-check" id="f-inspiration">○</span>
+                  <span class="dnd-misc-label">Inspiration</span>
+                </div>
+                <div class="dnd-misc-item">
+                  <span class="dnd-misc-value" id="f-maitrise">+2</span>
+                  <span class="dnd-misc-label">Bonus de maîtrise</span>
+                </div>
+              </div>
+
+              <!-- Jets de sauvegarde -->
+              <div class="dnd-section">
+                <div class="dnd-section-title">JETS DE SAUVEGARDE</div>
+                <div class="dnd-save-list" id="saveList"></div>
+              </div>
+
+              <!-- Compétences -->
+              <div class="dnd-section">
+                <div class="dnd-section-title">COMPÉTENCES</div>
+                <div class="dnd-skill-list" id="skillList"></div>
+              </div>
+
+              <!-- Perception passive -->
+              <div class="dnd-passive">
+                <span class="dnd-passive-value" id="f-perception">10</span>
+                <span class="dnd-passive-label">Sagesse (Perception) passive</span>
+              </div>
+
+              <!-- Autres maîtrises -->
+              <div class="dnd-section">
+                <div class="dnd-section-title">AUTRES MAÎTRISES ET LANGUES</div>
+                <div class="dnd-textarea-display" id="f-maitrisesLangues">—</div>
+              </div>
+
+            </div>
+
+            <!-- COLONNE CENTRE : combat + attaques -->
+            <div class="dnd-col-center">
+
+              <!-- CA / Initiative / Vitesse -->
+              <div class="dnd-combat-top">
+                <div class="dnd-combat-bubble">
+                  <span class="dnd-combat-label">CA</span>
+                  <span class="dnd-combat-value" id="f-ca">10</span>
+                </div>
+                <div class="dnd-combat-bubble">
+                  <span class="dnd-combat-label">Initiative</span>
+                  <span class="dnd-combat-value" id="f-init">+0</span>
+                </div>
+                <div class="dnd-combat-bubble">
+                  <span class="dnd-combat-label">Vitesse</span>
+                  <span class="dnd-combat-value" id="f-vit">9m</span>
+                </div>
+              </div>
+
+              <!-- PV -->
+              <div class="dnd-pv-section">
+                <div class="dnd-pv-max">
+                  <span class="dnd-field-label">Points de vie max</span>
+                  <span class="dnd-pv-value" id="f-pvmax">0</span>
+                </div>
+                <div class="dnd-pv-current">
+                  <span class="dnd-field-label">Points de vie actuels</span>
+                  <span class="dnd-pv-value big" id="f-pvact">0</span>
+                </div>
+                <div class="dnd-pv-temp">
+                  <span class="dnd-field-label">Points de vie temporaires</span>
+                  <span class="dnd-pv-value" id="f-pvtemp">0</span>
+                </div>
+              </div>
+
+              <!-- Dés de vie + jets contre mort -->
+              <div class="dnd-dice-death">
+                <div class="dnd-dice">
+                  <span class="dnd-field-label">Dés de vie</span>
+                  <span class="dnd-field-value" id="f-desact">—</span>
+                  <span class="dnd-field-label" style="margin-top:0.3rem">Total</span>
+                  <span class="dnd-field-value" id="f-destotal">—</span>
+                </div>
+                <div class="dnd-death">
+                  <span class="dnd-field-label">Jets contre la mort</span>
+                  <div class="dnd-death-row">
+                    <span class="dnd-death-label">Succès</span>
+                    <span class="dnd-death-boxes" id="f-succes">○ ○ ○</span>
+                  </div>
+                  <div class="dnd-death-row">
+                    <span class="dnd-death-label">Échecs</span>
+                    <span class="dnd-death-boxes" id="f-echecs">○ ○ ○</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Attaques -->
+              <div class="dnd-section">
+                <div class="dnd-section-title">ATTAQUES ET SORTS</div>
+                <div class="dnd-attack-header">
+                  <span>NOM</span>
+                  <span>BONUS ATT</span>
+                  <span>DÉGÂTS / TYPE</span>
+                </div>
+                <div id="attackList"></div>
+              </div>
+
+              <!-- Équipement -->
+              <div class="dnd-section">
+                <div class="dnd-section-title">ÉQUIPEMENT</div>
+                <div class="dnd-textarea-display" id="f-equipement">—</div>
+              </div>
+
+            </div>
+
+            <!-- COLONNE DROITE : perso + capacités -->
+            <div class="dnd-col-right">
+
+              <div class="dnd-section">
+                <div class="dnd-section-title">TRAITS DE PERSONNALITÉ</div>
+                <div class="dnd-textarea-display" id="f-traits">—</div>
+              </div>
+
+              <div class="dnd-section">
+                <div class="dnd-section-title">IDÉAUX</div>
+                <div class="dnd-textarea-display" id="f-ideaux">—</div>
+              </div>
+
+              <div class="dnd-section">
+                <div class="dnd-section-title">LIENS</div>
+                <div class="dnd-textarea-display" id="f-liens">—</div>
+              </div>
+
+              <div class="dnd-section">
+                <div class="dnd-section-title">DÉFAUTS</div>
+                <div class="dnd-textarea-display" id="f-defauts">—</div>
+              </div>
+
+              <div class="dnd-section" style="flex:1">
+                <div class="dnd-section-title">CAPACITÉS ET TRAITS</div>
+                <div class="dnd-textarea-display tall" id="f-capacites">—</div>
+              </div>
+
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+/* ── BADGE PJ ── */
+.pj-badge {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.3rem;
+  background: none;
+  border: 1px solid var(--border);
+  padding: 0.6rem 0.8rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  position: relative;
+}
+
+.pj-badge:hover {
+  border-color: var(--gold-dim);
+  background: rgba(201,168,76,0.06);
+}
+
+.pj-icon {
+  font-size: 1.2rem;
+  color: var(--gold);
+}
+
+.pj-label {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 0.6rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--gold-light);
+  font-weight: 600;
+}
+
+.pj-hint {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 0.55rem;
+  letter-spacing: 0.1em;
+  color: var(--text-dim);
+  white-space: nowrap;
+}
+
+/* ── OVERLAY MOT DE PASSE ── */
+.fiche-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.85);
+  z-index: 1000;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(4px);
+}
+
+.fiche-overlay.visible { display: flex; }
+
+.fiche-password-modal {
+  background: var(--bg-card);
+  border: 1px solid var(--gold-dim);
+  padding: 2.5rem;
+  width: 340px;
+  text-align: center;
+  position: relative;
+  animation: modalIn 0.3s cubic-bezier(0.34,1.56,0.64,1);
+}
+
+@keyframes modalIn {
+  from { opacity: 0; transform: scale(0.9) translateY(-10px); }
+  to   { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+.fiche-close {
+  position: absolute;
+  top: 0.8rem; right: 0.8rem;
+  background: none;
+  border: none;
+  color: var(--text-dim);
+  cursor: pointer;
+  font-size: 0.8rem;
+  transition: color 0.2s;
+}
+
+.fiche-close:hover { color: var(--text); }
+
+.fiche-password-logo {
+  font-size: 2rem;
+  color: var(--gold);
+  margin-bottom: 1rem;
+}
+
+.fiche-password-titre {
+  font-family: 'Cinzel', serif;
+  font-size: 1.1rem;
+  letter-spacing: 0.08em;
+  color: var(--text);
+  margin-bottom: 0.5rem;
+}
+
+.fiche-password-desc {
+  font-family: 'Crimson Pro', serif;
+  font-style: italic;
+  font-size: 0.95rem;
+  color: var(--text-dim);
+  margin-bottom: 1.5rem;
+}
+
+.fiche-password-input-group {
+  display: flex;
+  gap: 0;
+  margin-bottom: 0.5rem;
+}
+
+.fiche-password-input {
+  flex: 1;
+  background: var(--bg-deep);
+  border: 1px solid var(--border);
+  border-right: none;
+  color: var(--text);
+  padding: 0.6rem 1rem;
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 1rem;
+  letter-spacing: 0.1em;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.fiche-password-input:focus { border-color: var(--gold-dim); }
+
+.fiche-password-btn {
+  background: var(--gold);
+  border: 1px solid var(--gold);
+  color: var(--bg-deep);
+  padding: 0.6rem 1.2rem;
+  cursor: pointer;
+  font-size: 1rem;
+  font-weight: 700;
+  transition: background 0.2s;
+}
+
+.fiche-password-btn:hover { background: var(--gold-light); }
+
+.fiche-password-error {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 0.75rem;
+  color: var(--red);
+  letter-spacing: 0.1em;
+  display: none;
+  margin-top: 0.3rem;
+}
+
+.fiche-password-error.visible { display: block; }
+
+/* ── FICHE CONTAINER (FLIP) ── */
+.fiche-container {
+  position: fixed;
+  inset: 0;
+  z-index: 999;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0,0,0,0.95);
+  perspective: 1200px;
+  overflow-y: auto;
+  padding: 2rem;
+}
+
+.fiche-container.visible { display: flex; }
+
+.fiche-card {
+  width: 100%;
+  max-width: 1100px;
+  min-height: 80vh;
+  transform-style: preserve-3d;
+  transition: transform 0.8s cubic-bezier(0.645, 0.045, 0.355, 1.000);
+  position: relative;
+}
+
+.fiche-card.flipped { transform: rotateY(180deg); }
+
+.fiche-recto,
+.fiche-verso {
+  position: absolute;
+  width: 100%;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+.fiche-recto { transform: rotateY(0deg); }
+.fiche-verso { transform: rotateY(180deg); }
+
+/* ── FICHE D&D ── */
+.fiche-dnd {
+  background: #f5f0e8;
+  border: 2px solid #8b6914;
+  padding: 1.5rem;
+  position: relative;
+  min-height: 80vh;
+  font-family: 'Georgia', serif;
+  color: #1a1a1a;
+}
+
+.fiche-dnd-close {
+  position: fixed;
+  top: 1rem; right: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: rgba(10,10,14,0.9);
+  border: 1px solid var(--border);
+  color: var(--text-dim);
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 0.72rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  transition: all 0.2s;
+  z-index: 10;
+}
+
+.fiche-dnd-close:hover {
+  color: var(--gold-light);
+  border-color: var(--gold-dim);
+}
+
+/* ── LOADING ── */
+.fiche-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 400px;
+  gap: 1rem;
+  color: #8b6914;
+}
+
+.fiche-loading-spinner {
+  width: 32px; height: 32px;
+  border: 2px solid rgba(139,105,20,0.2);
+  border-top-color: #8b6914;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── EN-TÊTE ── */
+.dnd-header {
+  display: grid;
+  grid-template-columns: 220px 1fr;
+  gap: 0.5rem;
+  margin-bottom: 0.8rem;
+  border-bottom: 2px solid #8b6914;
+  padding-bottom: 0.8rem;
+}
+
+.dnd-header-nom {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid #8b6914;
+  padding: 0.4rem 0.6rem;
+  background: white;
+}
+
+.dnd-header-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.4rem;
+}
+
+.dnd-header-cell {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid #8b6914;
+  padding: 0.3rem 0.5rem;
+  background: white;
+}
+
+.dnd-field-label {
+  font-size: 0.55rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #8b6914;
+  font-family: 'Arial', sans-serif;
+  margin-bottom: 0.1rem;
+}
+
+.dnd-field-value {
+  font-size: 0.9rem;
+  color: #1a1a1a;
+  font-weight: 600;
+}
+
+/* ── CORPS 3 COLONNES ── */
+.dnd-body {
+  display: grid;
+  grid-template-columns: 200px 1fr 200px;
+  gap: 0.8rem;
+}
+
+/* ── STATS ── */
+.dnd-stats {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  margin-bottom: 0.8rem;
+}
+
+.dnd-stat {
+  display: flex;
+  align-items: center;
+  border: 1px solid #8b6914;
+  background: white;
+  padding: 0.3rem;
+  gap: 0.4rem;
+}
+
+.dnd-stat-name {
+  font-size: 0.5rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #8b6914;
+  font-family: 'Arial', sans-serif;
+  writing-mode: vertical-rl;
+  text-orientation: mixed;
+  transform: rotate(180deg);
+  flex-shrink: 0;
+}
+
+.dnd-stat-mod {
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: #1a1a1a;
+  text-align: center;
+  min-width: 36px;
+  background: #f0e8d0;
+  border: 1px solid #8b6914;
+  padding: 0.2rem;
+}
+
+.dnd-stat-score {
+  font-size: 0.75rem;
+  color: #555;
+  text-align: center;
+  min-width: 24px;
+}
+
+/* ── MISC ── */
+.dnd-misc {
+  display: flex;
+  gap: 0.4rem;
+  margin-bottom: 0.6rem;
+}
+
+.dnd-misc-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  border: 1px solid #8b6914;
+  padding: 0.3rem;
+  background: white;
+  text-align: center;
+}
+
+.dnd-misc-check, .dnd-misc-value {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #1a1a1a;
+}
+
+.dnd-misc-label {
+  font-size: 0.5rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #8b6914;
+  font-family: 'Arial', sans-serif;
+  text-align: center;
+}
+
+/* ── SECTIONS ── */
+.dnd-section {
+  margin-bottom: 0.6rem;
+  border: 1px solid #8b6914;
+  background: white;
+}
+
+.dnd-section-title {
+  background: #8b6914;
+  color: white;
+  font-size: 0.5rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-family: 'Arial', sans-serif;
+  padding: 0.2rem 0.5rem;
+  text-align: center;
+}
+
+/* ── SAUVEGARDES / COMPÉTENCES ── */
+.dnd-save-list, .dnd-skill-list {
+  padding: 0.3rem 0.5rem;
+}
+
+.dnd-skill-row {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.1rem 0;
+  font-size: 0.7rem;
+  border-bottom: 1px dotted #ddd;
+}
+
+.dnd-skill-row:last-child { border-bottom: none; }
+
+.dnd-skill-check {
+  color: #8b6914;
+  font-size: 0.75rem;
+  flex-shrink: 0;
+  width: 12px;
+}
+
+.dnd-skill-bonus {
+  font-weight: 700;
+  min-width: 26px;
+  text-align: right;
+  color: #1a1a1a;
+}
+
+.dnd-skill-name { color: #333; flex: 1; }
+
+/* ── PERCEPTION PASSIVE ── */
+.dnd-passive {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  border: 1px solid #8b6914;
+  background: white;
+  padding: 0.3rem 0.5rem;
+  margin-bottom: 0.6rem;
+}
+
+.dnd-passive-value {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #1a1a1a;
+  min-width: 28px;
+  text-align: center;
+}
+
+.dnd-passive-label {
+  font-size: 0.55rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #8b6914;
+  font-family: 'Arial', sans-serif;
+}
+
+/* ── COMBAT TOP ── */
+.dnd-combat-top {
+  display: flex;
+  gap: 0.4rem;
+  margin-bottom: 0.6rem;
+}
+
+.dnd-combat-bubble {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  border: 2px solid #8b6914;
+  padding: 0.4rem;
+  background: white;
+}
+
+.dnd-combat-label {
+  font-size: 0.5rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #8b6914;
+  font-family: 'Arial', sans-serif;
+}
+
+.dnd-combat-value {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: #1a1a1a;
+}
+
+/* ── PV ── */
+.dnd-pv-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  margin-bottom: 0.6rem;
+}
+
+.dnd-pv-max, .dnd-pv-current, .dnd-pv-temp {
+  border: 1px solid #8b6914;
+  background: white;
+  padding: 0.4rem 0.6rem;
+  display: flex;
+  flex-direction: column;
+}
+
+.dnd-pv-value {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #1a1a1a;
+}
+
+.dnd-pv-value.big { font-size: 1.6rem; }
+
+/* ── DÉS + MORT ── */
+.dnd-dice-death {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.4rem;
+  margin-bottom: 0.6rem;
+}
+
+.dnd-dice, .dnd-death {
+  border: 1px solid #8b6914;
+  background: white;
+  padding: 0.4rem 0.6rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.dnd-death-row {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.dnd-death-label {
+  font-size: 0.6rem;
+  color: #555;
+  min-width: 46px;
+}
+
+.dnd-death-boxes {
+  font-size: 0.75rem;
+  color: #8b6914;
+  letter-spacing: 0.1em;
+}
+
+/* ── ATTAQUES ── */
+.dnd-attack-header {
+  display: grid;
+  grid-template-columns: 1fr 70px 1fr;
+  gap: 0.3rem;
+  padding: 0.2rem 0.5rem;
+  background: #f0e8d0;
+  font-size: 0.5rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #8b6914;
+  font-family: 'Arial', sans-serif;
+}
+
+.dnd-attack-row {
+  display: grid;
+  grid-template-columns: 1fr 70px 1fr;
+  gap: 0.3rem;
+  padding: 0.2rem 0.5rem;
+  border-bottom: 1px dotted #ddd;
+  font-size: 0.75rem;
+}
+
+.dnd-attack-row:last-child { border-bottom: none; }
+
+/* ── TEXTAREA DISPLAY ── */
+.dnd-textarea-display {
+  padding: 0.5rem 0.6rem;
+  font-size: 0.75rem;
+  line-height: 1.6;
+  color: #333;
+  min-height: 60px;
+  white-space: pre-wrap;
+}
+
+.dnd-textarea-display.tall { min-height: 120px; }
+
+/* ── COLONNES ── */
+.dnd-col-left, .dnd-col-center, .dnd-col-right {
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── RESPONSIVE ── */
+@media (max-width: 900px) {
+  .dnd-body { grid-template-columns: 1fr; }
+  .fiche-container { padding: 0.5rem; }
+  .dnd-header { grid-template-columns: 1fr; }
+}
+</style>
+
+<script define:vars={{ slug }}>
+(function() {
+  // ── ÉLÉMENTS ──
+  const badge       = document.getElementById('pjBadge')
+  const overlay     = document.getElementById('ficheOverlay')
+  const ficheClose  = document.getElementById('ficheClose')
+  const passInput   = document.getElementById('passwordInput')
+  const passBtn     = document.getElementById('passwordBtn')
+  const passError   = document.getElementById('passwordError')
+  const container   = document.getElementById('ficheContainer')
+  const card        = document.getElementById('ficheCard')
+  const dndClose    = document.getElementById('ficheDndClose')
+  const loading     = document.getElementById('ficheLoading')
+  const content     = document.getElementById('ficheDndContent')
+
+  let ficheData = null
+
+  // ── HELPERS CALCUL D&D ──
+  function mod(score) {
+    const m = Math.floor((score - 10) / 2)
+    return m >= 0 ? `+${m}` : `${m}`
+  }
+
+  function modNum(score) {
+    return Math.floor((score - 10) / 2)
+  }
+
+  function cases(n, max = 3) {
+    let s = ''
+    for (let i = 0; i < max; i++) s += i < n ? '● ' : '○ '
+    return s.trim()
+  }
+
+  // ── OUVRIR OVERLAY MOT DE PASSE ──
+  badge.addEventListener('click', () => {
+    overlay.classList.add('visible')
+    setTimeout(() => passInput.focus(), 100)
+  })
+
+  // ── FERMER OVERLAY ──
+  ficheClose.addEventListener('click', () => {
+    overlay.classList.remove('visible')
+    passInput.value = ''
+    passError.classList.remove('visible')
+  })
+
+  overlay.addEventListener('click', (e) => {
+    if (e.target === overlay) {
+      overlay.classList.remove('visible')
+      passInput.value = ''
+      passError.classList.remove('visible')
+    }
+  })
+
+  // ── VALIDER MOT DE PASSE ──
+  async function validatePassword() {
+    const saisie = passInput.value.trim().toLowerCase()
+    if (!saisie) return
+
+    // Récupère la fiche depuis Sanity
+    try {
+      const query = encodeURIComponent(
+        `*[_type == "ficheDnD" && personnage->slug.current == "${slug}"][0]{
+          motDePasse,
+          classeNiveau, historique, nomJoueur, race, alignement, pointsExperience,
+          inspiration, bonusMaitrise,
+          caracteristiques,
+          jetsSauvegarde,
+          competences,
+          combat,
+          attaques,
+          traitsPersonnalite, ideaux, liens, defauts,
+          sagessPerceptionPassive, autresMaitrises, equipement, capacitesTrait,
+          "nomPerso": personnage->nom
+        }`
+      )
+      const res  = await fetch(`https://bkjiutba.api.sanity.io/v2024-01-01/data/query/production?query=${query}`)
+      const data = await res.json()
+      ficheData  = data.result
+
+      if (!ficheData) {
+        passError.textContent = 'Aucune fiche trouvée pour ce personnage.'
+        passError.classList.add('visible')
+        return
+      }
+
+      if (saisie !== ficheData.motDePasse.toLowerCase()) {
+        passError.textContent = 'Mot de passe incorrect.'
+        passError.classList.add('visible')
+        passInput.value = ''
+        passInput.focus()
+        return
+      }
+
+      // Mot de passe OK
+      overlay.classList.remove('visible')
+      passError.classList.remove('visible')
+      passInput.value = ''
+      afficherFiche()
+
+    } catch (err) {
+      passError.textContent = 'Erreur de connexion. Réessaie.'
+      passError.classList.add('visible')
+    }
+  }
+
+  passBtn.addEventListener('click', validatePassword)
+  passInput.addEventListener('keydown', e => { if (e.key === 'Enter') validatePassword() })
+
+  // ── AFFICHER LA FICHE ──
+  function afficherFiche() {
+    container.classList.add('visible')
+    loading.style.display    = 'flex'
+    content.style.display    = 'none'
+
+    // Petit délai pour l'animation flip
+    setTimeout(() => {
+      remplirFiche()
+      loading.style.display  = 'none'
+      content.style.display  = 'block'
+
+      setTimeout(() => {
+        card.classList.add('flipped')
+      }, 100)
+    }, 600)
+  }
+
+  // ── REMPLIR LA FICHE ──
+  function remplirFiche() {
+    const d = ficheData
+    const c = d.caracteristiques || {}
+    const js = d.jetsSauvegarde || {}
+    const co = d.competences || {}
+    const cb = d.combat || {}
+
+    // En-tête
+    document.getElementById('f-nom').textContent        = d.nomPerso || '—'
+    document.getElementById('f-classe').textContent     = d.classeNiveau || '—'
+    document.getElementById('f-historique').textContent = d.historique || '—'
+    document.getElementById('f-joueur').textContent     = d.nomJoueur || '—'
+    document.getElementById('f-race').textContent       = d.race || '—'
+    document.getElementById('f-alignement').textContent = d.alignement || '—'
+    document.getElementById('f-xp').textContent         = d.pointsExperience || '0'
+
+    // Stats
+    const stats = [
+      { key: 'force',        id: 'for' },
+      { key: 'dexterite',    id: 'dex' },
+      { key: 'constitution', id: 'con' },
+      { key: 'intelligence', id: 'int' },
+      { key: 'sagesse',      id: 'sag' },
+      { key: 'charisme',     id: 'cha' },
+    ]
+
+    stats.forEach(s => {
+      const score = c[s.key] || 10
+      document.getElementById(`score-${s.id}`).textContent = score
+      document.getElementById(`mod-${s.id}`).textContent   = mod(score)
+    })
+
+    // Inspiration + maîtrise
+    document.getElementById('f-inspiration').textContent = d.inspiration ? '●' : '○'
+    document.getElementById('f-maitrise').textContent    = `+${d.bonusMaitrise || 2}`
+
+    // Jets de sauvegarde
+    const saveList = document.getElementById('saveList')
+    saveList.innerHTML = ''
+    const saveStats = [
+      { key: 'force',        label: 'Force',        stat: 'force' },
+      { key: 'dexterite',    label: 'Dextérité',    stat: 'dexterite' },
+      { key: 'constitution', label: 'Constitution', stat: 'constitution' },
+      { key: 'intelligence', label: 'Intelligence', stat: 'intelligence' },
+      { key: 'sagesse',      label: 'Sagesse',      stat: 'sagesse' },
+      { key: 'charisme',     label: 'Charisme',     stat: 'charisme' },
+    ]
+    saveStats.forEach(s => {
+      const maitrise = js[s.key] || false
+      const bonus    = modNum(c[s.stat] || 10) + (maitrise ? (d.bonusMaitrise || 2) : 0)
+      const bonusStr = bonus >= 0 ? `+${bonus}` : `${bonus}`
+      const row = document.createElement('div')
+      row.className = 'dnd-skill-row'
+      row.innerHTML = `
+        <span class="dnd-skill-check">${maitrise ? '●' : '○'}</span>
+        <span class="dnd-skill-bonus">${bonusStr}</span>
+        <span class="dnd-skill-name">${s.label}</span>
+      `
+      saveList.appendChild(row)
+    })
+
+    // Compétences
+    const skillList = document.getElementById('skillList')
+    skillList.innerHTML = ''
+    const skills = [
+      { key: 'acrobaties',    label: 'Acrobaties',    stat: 'dexterite' },
+      { key: 'arcanes',       label: 'Arcanes',       stat: 'intelligence' },
+      { key: 'athletisme',    label: 'Athlétisme',    stat: 'force' },
+      { key: 'discretion',    label: 'Discrétion',    stat: 'dexterite' },
+      { key: 'dressage',      label: 'Dressage',      stat: 'sagesse' },
+      { key: 'escamotage',    label: 'Escamotage',    stat: 'dexterite' },
+      { key: 'histoire',      label: 'Histoire',      stat: 'intelligence' },
+      { key: 'intimidation',  label: 'Intimidation',  stat: 'charisme' },
+      { key: 'investigation', label: 'Investigation', stat: 'intelligence' },
+      { key: 'medecine',      label: 'Médecine',      stat: 'sagesse' },
+      { key: 'nature',        label: 'Nature',        stat: 'intelligence' },
+      { key: 'perception',    label: 'Perception',    stat: 'sagesse' },
+      { key: 'perspicacite',  label: 'Perspicacité',  stat: 'sagesse' },
+      { key: 'persuasion',    label: 'Persuasion',    stat: 'charisme' },
+      { key: 'religion',      label: 'Religion',      stat: 'intelligence' },
+      { key: 'representation',label: 'Représentation',stat: 'charisme' },
+      { key: 'survie',        label: 'Survie',        stat: 'sagesse' },
+      { key: 'tromperie',     label: 'Tromperie',     stat: 'charisme' },
+    ]
+    skills.forEach(s => {
+      const maitrise = co[s.key] || false
+      const bonus    = modNum(c[s.stat] || 10) + (maitrise ? (d.bonusMaitrise || 2) : 0)
+      const bonusStr = bonus >= 0 ? `+${bonus}` : `${bonus}`
+      const row = document.createElement('div')
+      row.className = 'dnd-skill-row'
+      row.innerHTML = `
+        <span class="dnd-skill-check">${maitrise ? '●' : '○'}</span>
+        <span class="dnd-skill-bonus">${bonusStr}</span>
+        <span class="dnd-skill-name">${s.label}</span>
+      `
+      skillList.appendChild(row)
+    })
+
+    // Perception passive
+    document.getElementById('f-perception').textContent = d.sagessPerceptionPassive || '10'
+
+    // Autres maîtrises
+    document.getElementById('f-maitrisesLangues').textContent = d.autresMaitrises || '—'
+
+    // Combat
+    document.getElementById('f-ca').textContent      = cb.classeArmure || '10'
+    const initVal = cb.initiative || 0
+    document.getElementById('f-init').textContent    = initVal >= 0 ? `+${initVal}` : `${initVal}`
+    document.getElementById('f-vit').textContent     = cb.vitesse ? `${cb.vitesse}m` : '9m'
+    document.getElementById('f-pvmax').textContent   = cb.pointsVieMax || '0'
+    document.getElementById('f-pvact').textContent   = cb.pointsVieActuels || '0'
+    document.getElementById('f-pvtemp').textContent  = cb.pointsVieTemp || '0'
+    document.getElementById('f-desact').textContent  = cb.desDieActuels || '—'
+    document.getElementById('f-destotal').textContent= cb.desDieTotal || '—'
+    document.getElementById('f-succes').textContent  = cases(cb.succesContreMort || 0)
+    document.getElementById('f-echecs').textContent  = cases(cb.echecsContreMort || 0)
+
+    // Attaques
+    const attackList = document.getElementById('attackList')
+    attackList.innerHTML = ''
+    if (d.attaques && d.attaques.length > 0) {
+      d.attaques.forEach(a => {
+        const row = document.createElement('div')
+        row.className = 'dnd-attack-row'
+        row.innerHTML = `<span>${a.nom || '—'}</span><span>${a.bonusAtt || '—'}</span><span>${a.degats || '—'}</span>`
+        attackList.appendChild(row)
+      })
+    } else {
+      attackList.innerHTML = '<div class="dnd-attack-row"><span>—</span><span>—</span><span>—</span></div>'
+    }
+
+    // Équipement
+    document.getElementById('f-equipement').textContent = d.equipement || '—'
+
+    // Perso
+    document.getElementById('f-traits').textContent   = d.traitsPersonnalite || '—'
+    document.getElementById('f-ideaux').textContent   = d.ideaux || '—'
+    document.getElementById('f-liens').textContent    = d.liens || '—'
+    document.getElementById('f-defauts').textContent  = d.defauts || '—'
+    document.getElementById('f-capacites').textContent= d.capacitesTrait || '—'
+  }
+
+  // ── FERMER LA FICHE ──
+  dndClose.addEventListener('click', () => {
+    card.classList.remove('flipped')
+    setTimeout(() => {
+      container.classList.remove('visible')
+    }, 800)
+  })
+
+})()
+</script>

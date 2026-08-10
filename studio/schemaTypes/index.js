@@ -8,6 +8,7 @@ import evenementFrise  from './evenementFrise'
 import definition from './definition'
 import termeLore  from './annotations/termeLore'
 import sessionLignes from './sessionLignes'
+import ficheDnD from './ficheDnD'
  
-export const schemaTypes = [personnage, nouvelle, lieu, session, age, articleLore, evenementFrise, definition, termeLore, sessionLignes]
+export const schemaTypes = [personnage, nouvelle, lieu, session, age, articleLore, evenementFrise, definition, termeLore, sessionLignes, ficheDnD]
 

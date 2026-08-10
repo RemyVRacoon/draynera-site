@@ -1,8 +1,9 @@
-﻿---
+---
 import Base from '../../layouts/Base.astro'
 import { sanityClient, imageUrl } from '../../lib/sanity.js'
 import { toHTML } from '@portabletext/to-html'
- 
+import FicheDnD from '../../components/FicheDnD.astro'
+
 // Récupère tous les personnages pour générer les URLs
 export async function getStaticPaths() {
   const personnages = await sanityClient.fetch(
@@ -12,13 +13,13 @@ export async function getStaticPaths() {
     params: { slug: p.slug.current }
   }))
 }
- 
+
 // Récupère les données du personnage courant
 const { slug } = Astro.params
 const perso = await sanityClient.fetch(
   `*[_type == "personnage" && slug.current == $slug][0]{
     nom, surnom, citation, role, lieu,
-    resumeBio,        // ← nouveau
+    resumeBio,
     biographie,
     "imageHeroUrl": imageHero.asset->url,
     "imageDesignUrl": imageDesign.asset->url,
@@ -28,15 +29,15 @@ const perso = await sanityClient.fetch(
   }`,
   { slug }
 )
- 
+
 const heroUrl   = perso.imageHeroUrl
 const designUrl = perso.imageDesignUrl
 const lieuUrl   = perso.imageLieuUrl
 const bioHTML   = perso.biographie ? toHTML(perso.biographie) : ''
 ---
- 
+
 <Base title={perso.nom}>
- 
+
 <!-- HERO -->
 <section class="hero" style={heroUrl ? `--hero-img: url(${heroUrl})` : ''}>
   <div class="hero-bg" style={heroUrl ? `background-image: url(${heroUrl})` : ''}></div>
@@ -46,7 +47,7 @@ const bioHTML   = perso.biographie ? toHTML(perso.biographie) : ''
     {perso.surnom && <p class="hero-subtitle">{perso.surnom}</p>}
   </div>
 </section>
- 
+
 <!-- INFO GRID -->
 <main class="main">
   <div class="info-grid">
@@ -57,7 +58,7 @@ const bioHTML   = perso.biographie ? toHTML(perso.biographie) : ''
         : <div class="char-placeholder"></div>
       }
     </div>
- 
+
     <div class="info-col col-center">
       {perso.citation && (
         <div class="quote-block">
@@ -66,27 +67,32 @@ const bioHTML   = perso.biographie ? toHTML(perso.biographie) : ''
         </div>
       )}
       <div class="bio-block">
-  {perso.resumeBio
-    ? <p class="bio-text">{perso.resumeBio}</p>
-    : <Fragment set:html={bioHTML} />
-  }
-  <a href={`/personnages/${slug}/biographie`} class="bio-cta">
-    <span>Lire la biographie</span>
-  </a>
-</div>
+        {perso.resumeBio
+          ? <p class="bio-text">{perso.resumeBio}</p>
+          : <Fragment set:html={bioHTML} />
+        }
+        <a href={`/personnages/${slug}/biographie`} class="bio-cta">
+          <span>Lire la biographie</span>
+        </a>
+      </div>
     </div>
- 
+
+    <!-- Colonne droite : rôle + fiche DnD si PJ + lieu -->
     <div class="info-col">
       <div class="role-block">
         <span class="role-icon">👤</span>
         <p class="role-label-sm">Rôle</p>
         <p class="role-value">{perso.role}</p>
       </div>
+
+      <!-- Bouton fiche D&D uniquement pour les PJ -->
+      {perso.role === 'PJ' && <FicheDnD slug={slug} />}
+
       {lieuUrl && <img src={lieuUrl} alt={perso.lieu} class="lieu-img">}
       {perso.lieu && <p class="role-value">{perso.lieu}</p>}
     </div>
   </div>
- 
+
   <!-- NOUVELLE -->
   {perso.nouvelle && (
     <section class="nouvelle-section">
@@ -99,7 +105,7 @@ const bioHTML   = perso.biographie ? toHTML(perso.biographie) : ''
       </a>
     </section>
   )}
- 
+
   <!-- GALERIE -->
   {perso.galerie?.length > 0 && (
     <section class="gallery-section">
@@ -116,5 +122,5 @@ const bioHTML   = perso.biographie ? toHTML(perso.biographie) : ''
     </section>
   )}
 </main>
- 
+
 </Base>
