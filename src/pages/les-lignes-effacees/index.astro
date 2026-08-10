@@ -3,7 +3,7 @@ import Base from '../../layouts/Base.astro'
 import { sanityClient } from '../../lib/sanity.js'
 
 const sessions = await sanityClient.fetch(`
-  *[_type == "session"] | order(numero asc) {
+  *[_type == "sessionLignes"] | order(numero asc) {
     titre, slug, numero, date, description,
     videoYoutube,
     "vignetteUrl": imageVignette.asset->url
@@ -19,24 +19,20 @@ function formatDate(dateStr) {
 }
 ---
 
-<Base title="La Ménagerie">
+<Base title="Les Lignes Effacées">
 
 <!-- HERO -->
 <section class="hub-hero">
   <div class="hub-hero-bg"></div>
   <div class="hub-hero-content">
     <p class="hub-eyebrow">Univers · Draynera</p>
-    <img
-      src="/images/logo_menagerie.png"
-      alt="La Ménagerie"
-      class="hub-logo"
-    />
+    <h1 class="hub-title">Les Lignes Effacées</h1>
     <div class="hub-ornament">
       <span class="hub-line"></span>
       <span class="hub-diamond"></span>
       <span class="hub-line"></span>
     </div>
-    <p class="hub-desc">Les chroniques de la campagne — résumés et rediffusions des sessions de jeu.</p>
+    <p class="hub-desc">Le spin-off en six sessions — résumés et rediffusions.</p>
   </div>
 </section>
 
@@ -47,7 +43,7 @@ function formatDate(dateStr) {
     <header class="sous-header">
       <div class="sous-ligne"></div>
       <div class="sous-titre-groupe">
-        <p class="sous-eyebrow">La Ménagerie</p>
+        <p class="sous-eyebrow">Les Lignes Effacées</p>
         <h2 class="sous-titre">Rediffusions</h2>
       </div>
       <div class="sous-ligne"></div>
@@ -56,7 +52,7 @@ function formatDate(dateStr) {
     {avecVideo.length > 0 ? (
       <div class="sessions-grille">
         {avecVideo.map(session => (
-          <a href={`/la-menagerie/sessions/${session.slug.current}`} class="session-carte">
+          <a href={`/les-lignes-effacees/sessions/${session.slug.current}`} class="session-carte">
             <div
               class="session-carte-img"
               style={session.vignetteUrl ? `background-image: url(${session.vignetteUrl})` : ''}
@@ -91,7 +87,7 @@ function formatDate(dateStr) {
     <header class="sous-header">
       <div class="sous-ligne"></div>
       <div class="sous-titre-groupe">
-        <p class="sous-eyebrow">La Ménagerie</p>
+        <p class="sous-eyebrow">Les Lignes Effacées</p>
         <h2 class="sous-titre">Résumés de sessions</h2>
       </div>
       <div class="sous-ligne"></div>
@@ -100,7 +96,7 @@ function formatDate(dateStr) {
     {sessions.length > 0 ? (
       <div class="resumes-liste">
         {sessions.map(session => (
-          <a href={`/la-menagerie/sessions/${session.slug.current}`} class="resume-ligne">
+          <a href={`/les-lignes-effacees/sessions/${session.slug.current}`} class="resume-ligne">
             <span class="resume-num">#{String(session.numero).padStart(2, '0')}</span>
             <div class="resume-info">
               <h3 class="resume-titre">{session.titre}</h3>
@@ -145,9 +141,9 @@ function formatDate(dateStr) {
   position: absolute;
   inset: 0;
   background:
-    radial-gradient(ellipse 80% 100% at 50% 0%, rgba(155,89,182,0.25) 0%, transparent 70%),
-    radial-gradient(ellipse 50% 60% at 50% 100%, rgba(155,89,182,0.1) 0%, transparent 60%),
-    linear-gradient(180deg, #160a20 0%, #0a0a0e 100%);
+    radial-gradient(ellipse 80% 100% at 50% 0%, rgba(192,57,43,0.2) 0%, transparent 70%),
+    radial-gradient(ellipse 50% 60% at 50% 100%, rgba(192,57,43,0.08) 0%, transparent 60%),
+    linear-gradient(180deg, #200a0a 0%, #0a0a0e 100%);
 }
 
 .hub-hero-bg::after {
@@ -155,11 +151,11 @@ function formatDate(dateStr) {
   position: absolute;
   inset: 0;
   background: repeating-linear-gradient(
-    45deg,
+    -45deg,
     transparent,
     transparent 40px,
-    rgba(155,89,182,0.015) 40px,
-    rgba(155,89,182,0.015) 41px
+    rgba(192,57,43,0.015) 40px,
+    rgba(192,57,43,0.015) 41px
   );
 }
 
@@ -168,9 +164,6 @@ function formatDate(dateStr) {
   z-index: 1;
   text-align: center;
   padding: 2rem;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
 }
 
 .hub-eyebrow {
@@ -178,17 +171,20 @@ function formatDate(dateStr) {
   font-size: 0.7rem;
   letter-spacing: 0.35em;
   text-transform: uppercase;
-  color: #9b59b6;
-  margin-bottom: 1rem;
+  color: var(--red);
+  margin-bottom: 0.8rem;
 }
 
-/* Logo à la place du titre */
-.hub-logo {
-  height: 120px;
-  width: auto;
-  display: block;
+.hub-title {
+  font-family: 'Cinzel', serif;
+  font-weight: 900;
+  font-size: clamp(2rem, 5vw, 4rem);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text);
+  text-shadow: 0 0 40px rgba(192,57,43,0.5);
   margin-bottom: 1rem;
-  filter: drop-shadow(0 0 20px rgba(155,89,182,0.4));
+  line-height: 1.1;
 }
 
 .hub-ornament {
@@ -203,17 +199,17 @@ function formatDate(dateStr) {
   display: block;
   width: 60px;
   height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(155,89,182,0.4));
+  background: linear-gradient(90deg, transparent, rgba(192,57,43,0.4));
 }
 
 .hub-ornament .hub-line:last-child {
-  background: linear-gradient(90deg, rgba(155,89,182,0.4), transparent);
+  background: linear-gradient(90deg, rgba(192,57,43,0.4), transparent);
 }
 
 .hub-diamond {
   display: block;
   width: 7px; height: 7px;
-  background: #9b59b6;
+  background: var(--red);
   transform: rotate(45deg);
 }
 
@@ -264,7 +260,7 @@ function formatDate(dateStr) {
   font-size: 0.62rem;
   letter-spacing: 0.3em;
   text-transform: uppercase;
-  color: #9b59b6;
+  color: var(--red);
   margin-bottom: 0.2rem;
 }
 
@@ -314,7 +310,7 @@ function formatDate(dateStr) {
 }
 
 .session-carte:hover .session-play {
-  background: rgba(155,89,182,0.3);
+  background: rgba(192,57,43,0.3);
 }
 
 .session-carte-content {
@@ -335,7 +331,7 @@ function formatDate(dateStr) {
   font-size: 0.65rem;
   letter-spacing: 0.2em;
   text-transform: uppercase;
-  color: #9b59b6;
+  color: var(--red);
   font-weight: 600;
 }
 
@@ -388,14 +384,14 @@ function formatDate(dateStr) {
 
 .resume-ligne:hover {
   background: var(--bg-card2);
-  border-color: rgba(155,89,182,0.3);
+  border-color: rgba(192,57,43,0.3);
 }
 
 .resume-num {
   font-family: 'Courier New', monospace;
   font-size: 1rem;
   font-weight: 700;
-  color: #9b59b6;
+  color: var(--red);
   flex-shrink: 0;
 }
 
@@ -442,8 +438,8 @@ function formatDate(dateStr) {
   font-size: 0.6rem;
   letter-spacing: 0.15em;
   text-transform: uppercase;
-  color: #9b59b6;
-  border: 1px solid rgba(155,89,182,0.3);
+  color: var(--red);
+  border: 1px solid rgba(192,57,43,0.3);
   padding: 0.1rem 0.4rem;
 }
 
@@ -456,7 +452,7 @@ function formatDate(dateStr) {
 }
 
 .resume-ligne:hover .resume-fleche {
-  color: #9b59b6;
+  color: var(--red);
   transform: translateX(3px);
 }
 
@@ -474,7 +470,6 @@ function formatDate(dateStr) {
 /* ── RESPONSIVE ── */
 @media (max-width: 900px) {
   .sessions-grille { grid-template-columns: repeat(2, 1fr); }
-  .hub-logo { height: 80px; }
 }
 
 @media (max-width: 600px) {
