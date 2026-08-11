@@ -56,8 +56,9 @@ const evenements = await sanityClient.fetch(`
 
       // ── MINEUR : affichage inline sur une ligne ──
       if (importance === 'mineur') {
+        const gauche = i % 2 === 0
         return (
-          <div class="frise-evt frise-evt-mineur">
+          <div class={`frise-evt frise-evt-mineur ${gauche ? 'mineur-gauche' : 'mineur-droite'}`}>
 
             <!-- Point losange petit rempli -->
             <div class="frise-point frise-point-mineur">
@@ -373,16 +374,30 @@ const evenements = await sanityClient.fetch(`
   flex-shrink: 0;
 }
 
-/* Ligne de texte inline — centrée sur la ligne de frise */
+/* Ligne de texte inline — alternée gauche/droite */
 .frise-mineur-content {
   display: flex;
   align-items: baseline;
   flex-wrap: wrap;
   gap: 0.4rem;
   padding: 0.2rem 0;
-  /* Occupe toute la largeur, texte centré autour de la ligne */
-  width: 100%;
-  justify-content: center;
+  width: calc(50% - 20px);
+}
+
+.mineur-gauche .frise-mineur-content {
+  margin-left: 0;
+  margin-right: auto;
+  padding-right: 2rem;
+  justify-content: flex-end;
+  text-align: right;
+}
+
+.mineur-droite .frise-mineur-content {
+  margin-left: auto;
+  margin-right: 0;
+  padding-left: 2rem;
+  justify-content: flex-start;
+  text-align: left;
 }
 
 .frise-mineur-date {
