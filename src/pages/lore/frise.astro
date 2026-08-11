@@ -51,22 +51,47 @@ const evenements = await sanityClient.fetch(`
 
     <!-- Événements -->
     {evenements.map((evt, i) => {
-      const gauche = i % 2 === 0
+      const importance = evt.importance || 'normal'
       const resumeHTML = portableTextToHTML(evt.resume)
+
+      // ── MINEUR : affichage inline sur une ligne ──
+      if (importance === 'mineur') {
+        return (
+          <div class="frise-evt frise-evt-mineur">
+
+            <!-- Point losange petit rempli -->
+            <div class="frise-point frise-point-mineur">
+              <div class="frise-point-inner-mineur"></div>
+            </div>
+
+            <!-- Ligne de texte inline -->
+            <div class="frise-mineur-content">
+              {evt.date && <span class="frise-mineur-date">{evt.date}</span>}
+              <span class="frise-mineur-sep">—</span>
+              <span class="frise-mineur-titre">{evt.titre}</span>
+              {evt.resume && evt.resume.length > 0 && (
+                <span class="frise-mineur-resume">
+                  <Fragment set:html={resumeHTML} />
+                </span>
+              )}
+            </div>
+
+          </div>
+        )
+      }
+
+      // ── MAJEUR / NORMAL : affichage encart ──
+      const gauche = i % 2 === 0
       return (
-        <div class={`frise-evt ${gauche ? 'gauche' : 'droite'} importance-${evt.importance || 'normal'}`}>
+        <div class={`frise-evt ${gauche ? 'gauche' : 'droite'} importance-${importance}`}>
 
-          <!-- Contenu -->
+          <!-- Contenu encart -->
           <div class="frise-evt-content">
-
-            {evt.imageUrl && (
+            {evt.imageUrl && importance === 'majeur' && (
               <div class="frise-evt-img" style={`background-image: url(${evt.imageUrl})`}></div>
             )}
-
             <div class="frise-evt-body">
-              {evt.age && (
-                <p class="frise-evt-age">{evt.age.titre}</p>
-              )}
+              {evt.age && <p class="frise-evt-age">{evt.age.titre}</p>}
               <p class="frise-evt-date">{evt.date}</p>
               <h2 class="frise-evt-titre">{evt.titre}</h2>
               <div class="frise-evt-resume">
@@ -201,7 +226,7 @@ const evenements = await sanityClient.fetch(`
   transform: translateX(-50%);
 }
 
-/* ── ÉVÉNEMENT ── */
+/* ── ÉVÉNEMENT MAJEUR / NORMAL ── */
 .frise-evt {
   position: relative;
   display: grid;
@@ -226,10 +251,7 @@ const evenements = await sanityClient.fetch(`
   padding-right: 2.5rem;
 }
 
-.frise-evt.gauche .frise-connecteur {
-  grid-column: 2;
-  grid-row: 1;
-}
+.frise-evt.gauche .frise-connecteur { grid-column: 2; grid-row: 1; }
 
 .frise-evt.droite .frise-evt-content {
   grid-column: 3;
@@ -238,11 +260,9 @@ const evenements = await sanityClient.fetch(`
   padding-left: 2.5rem;
 }
 
-.frise-evt.droite .frise-connecteur {
-  grid-column: 2;
-  grid-row: 1;
-}
+.frise-evt.droite .frise-connecteur { grid-column: 2; grid-row: 1; }
 
+/* Point majeur / normal */
 .frise-point {
   grid-column: 2;
   grid-row: 1;
@@ -266,16 +286,14 @@ const evenements = await sanityClient.fetch(`
   box-shadow: 0 0 12px var(--gold-dim);
 }
 
-/* ── CONTENU EVT ── */
+/* Contenu encart */
 .frise-evt-content {
   background: var(--bg-card);
   border: 1px solid var(--border);
   transition: border-color 0.3s;
 }
 
-.frise-evt-content:hover {
-  border-color: var(--gold-dim);
-}
+.frise-evt-content:hover { border-color: var(--gold-dim); }
 
 .frise-evt-img {
   width: 100%;
@@ -285,9 +303,7 @@ const evenements = await sanityClient.fetch(`
   filter: brightness(0.7) saturate(0.8);
 }
 
-.frise-evt-body {
-  padding: 1.4rem 1.6rem;
-}
+.frise-evt-body { padding: 1.4rem 1.6rem; }
 
 .frise-evt-age {
   font-family: 'Rajdhani', sans-serif;
@@ -323,12 +339,98 @@ const evenements = await sanityClient.fetch(`
   color: var(--text-mid);
 }
 
-.frise-evt-resume p {
-  margin-bottom: 0.6em;
+.frise-evt-resume p { margin-bottom: 0.6em; }
+.frise-evt-resume p:last-child { margin-bottom: 0; }
+
+/* ── ÉVÉNEMENT MINEUR ── */
+.frise-evt-mineur {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  margin-bottom: 1.2rem;
+  grid-template-columns: none;
+  /* On centre sur la ligne verticale */
+  position: relative;
 }
 
-.frise-evt-resume p:last-child {
-  margin-bottom: 0;
+/* Point losange petit rempli centré sur la ligne */
+.frise-point-mineur {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 2;
+  padding: 0;
+}
+
+.frise-point-inner-mineur {
+  width: 8px; height: 8px;
+  background: var(--gold-dim);
+  transform: rotate(45deg);
+  border: 1px solid var(--gold);
+  flex-shrink: 0;
+}
+
+/* Ligne de texte inline — centrée sur la ligne de frise */
+.frise-mineur-content {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  padding: 0.2rem 0;
+  /* Occupe toute la largeur, texte centré autour de la ligne */
+  width: 100%;
+  justify-content: center;
+}
+
+.frise-mineur-date {
+  font-family: 'Cinzel', serif;
+  font-size: 0.72rem;
+  letter-spacing: 0.12em;
+  color: var(--text-dim);
+  flex-shrink: 0;
+}
+
+.frise-mineur-sep {
+  color: var(--gold-dim);
+  flex-shrink: 0;
+}
+
+.frise-mineur-titre {
+  font-family: 'Cinzel', serif;
+  font-size: 0.82rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: var(--text-mid);
+}
+
+/* Le résumé mineur est inline, sans block */
+.frise-mineur-resume {
+  font-family: 'Crimson Pro', serif;
+  font-size: 0.82rem;
+  color: var(--text-dim);
+  font-style: italic;
+}
+
+/* Supprime les balises <p> du portable text pour rester inline */
+.frise-mineur-resume p {
+  display: inline;
+  margin: 0;
+}
+
+.frise-mineur-resume p::before {
+  content: ' — ';
+  color: var(--gold-dim);
+}
+
+/* Liens lore dans les mineurs */
+.frise-mineur-resume [data-lore-slug],
+.frise-mineur-titre [data-lore-slug] {
+  color: var(--gold-light);
+  border-bottom: 1px dotted var(--gold-dim);
+  cursor: help;
 }
 
 /* ── FIN DE FRISE ── */
@@ -369,10 +471,12 @@ const evenements = await sanityClient.fetch(`
 /* ── RESPONSIVE ── */
 @media (max-width: 700px) {
   .frise-ligne { left: 24px; }
+
   .frise-evt {
     grid-template-columns: 48px 1fr;
     grid-template-rows: auto;
   }
+
   .frise-evt.gauche .frise-evt-content,
   .frise-evt.droite .frise-evt-content {
     grid-column: 2;
@@ -381,14 +485,21 @@ const evenements = await sanityClient.fetch(`
     padding-left: 1.5rem;
     padding-right: 0;
   }
+
   .frise-point {
     grid-column: 1;
     grid-row: 1;
     justify-content: center;
     padding-top: 1.2rem;
   }
+
   .frise-connecteur { display: none; }
   .frise-container { padding: 2rem 1rem 6rem; }
+
+  /* Mineur mobile */
+  .frise-evt-mineur { padding-left: 48px; }
+  .frise-point-mineur { left: 24px; }
+  .frise-mineur-content { justify-content: flex-start; }
 }
 </style>
 
